@@ -20,6 +20,7 @@ public class BlockRoot : MonoBehaviour
     private int require_blocks = 3;
 
     private HashSet<Vector2Int> negative_block_positions; // 연소 중인 블록의 위치를 저장하는 2차원 배열
+    public bool preventAutoMatchOnStart = true;
 
     void Start()
     {
@@ -210,6 +211,11 @@ public class BlockRoot : MonoBehaviour
                 // 전체 색 중에서 임의로 하나의 색을 선택
                 color_index = Random.Range(0, (int)Block.COLOR.NORMAL_COLOR_NUM);
             }
+        }
+
+        if (this.preventAutoMatchOnStart)
+        {
+            this.RemoveInitialMatches();
         }
     }
 
@@ -597,5 +603,62 @@ public class BlockRoot : MonoBehaviour
     public void RemoveNegativeBlockPosition(Vector2Int position)
     {
         this.negative_block_positions.Remove(position);
+    }
+
+    // 맵 전체를 스캔하여 3매치가 발생한 블록의 색상을 안전하게 교체하는 함수
+    private void RemoveInitialMatches()
+    {
+        bool is_match_exists = true; // 매칭된 블록이 있는지 확인하는 플래그
+
+        // 매칭된 블록이 하나도 없을 때까지 반복 검사
+        while (is_match_exists)
+        {
+            is_match_exists = false; // 일단 없다고 가정하고 시작
+
+            for (int y = 0; y < Block.BLOCK_NUM_Y; y++)
+            {
+                for (int x = 0; x < Block.BLOCK_NUM_X; x++)
+                {
+                    BlockControl block = this.blocks[x, y];
+                    Block.COLOR current_color = block.color;
+                    bool is_match = false;
+
+                    // 1. 가로 검사 (왼쪽으로 연속 3개인지 확인)
+                    if (x >= 2 &&
+                        this.blocks[x - 1, y].color == current_color &&
+                        this.blocks[x - 2, y].color == current_color)
+                    {
+                        is_match = true;
+                    }
+
+                    // 2. 세로 검사 (아래쪽으로 연속 3개인지 확인)
+                    if (!is_match && y >= 2 &&
+                        this.blocks[x, y - 1].color == current_color &&
+                        this.blocks[x, y - 2].color == current_color)
+                    {
+                        is_match = true;
+                    }
+
+                    // 3매치가 발견되었다면
+                    if (is_match)
+                    {
+                        Block.COLOR new_color;
+
+                        // 현재 색상과 다른 색상이 나올 때까지 랜덤 뽑기
+                        do
+                        {
+                            new_color = this.selectBlockColor();
+                        } while (new_color == current_color);
+
+                        // 블록 색상 변경
+                        block.setColor(new_color);
+
+                        // 색상을 바꿨으므로, 이 변경으로 인해 다른 곳에서 
+                        // 우연히 새로운 매칭이 발생했을 수 있으니 다시 전체 검사하도록 플래그 설정
+                        is_match_exists = true;
+                    }
+                }
+            }
+        }
     }
 }
