@@ -117,4 +117,19 @@ public class LevelControl
       // 선택된 패턴의 연소시간을 반환
         return (this.level_datas[this.select_level].heat_time);
     }
+
+    public void setVanishTime(float vanish_time)
+    { // 선택되어 있는 레벨 패턴의 연소 시간을 vanish_time으로 설정
+      // 선택된 패턴의 연소시간을 vanish_time으로 설정
+        this.level_datas[this.select_level].heat_time = vanish_time;
+    }
+
+    public void setProbability(Block.COLOR color, float probability)
+    { // 선택되어 있는 레벨 패턴의 color 색상의 출현 확률을 probability로 설정
+      // 선택된 패턴의 color 색상의 출현 확률을 probability로 설정
+        this.level_datas[this.select_level].probability[(int)color] = probability;
+        // 출현 확률의 합계가 정확히 100%가 되도록 한다
+        this.level_datas[this.select_level].normalize();
+        Debug.Log("Each Blocks' probability = " + string.Join(", ", this.level_datas[this.select_level].probability));
+    }
 }

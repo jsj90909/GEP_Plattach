@@ -17,15 +17,21 @@ public class BlockRoot : MonoBehaviour
     public TextAsset levelData = null; // 레벨 데이터의 텍스트를 저장
     public LevelControl level_control; // LevelControl를 저장
 
-    private int require_blocks = 3;
+    [SerializeField] private int require_blocks = 3;
 
-    private HashSet<Vector2Int> negative_block_positions; // 연소 중인 블록의 위치를 저장하는 2차원 배열
+    private HashSet<Vector2Int> negative_block_positions = new HashSet<Vector2Int>();
+    private HashSet<Vector2Int> move_lock_positions = new HashSet<Vector2Int>();
+
     public bool preventAutoMatchOnStart = true;
 
+    private JokerRoot joker_root = null;
+    private DebuffRoot debuff_root = null;
     void Start()
     {
         this.main_camera = GameObject.FindGameObjectWithTag("MainCamera"); // 카메라로부터 마우스 커서를 통과하는 광선을 쏘기 위해서 필요
         this.score_counter = this.gameObject.GetComponent<ScoreCounter>();
+        this.joker_root = this.gameObject.GetComponent<JokerRoot>();
+        this.debuff_root = this.gameObject.GetComponent<DebuffRoot>();
     }
     void Update()
     { // 마우스 좌표와 겹치는지 체크, 잡을 수 있는 상태의 블록을 잡음
@@ -41,6 +47,10 @@ public class BlockRoot : MonoBehaviour
                     { // blocks 배열의 모든 요소를 차례로 처리
                         if (!block.isGrabbable())
                         { // 블록을 잡을 수 없다면
+                            continue;
+                        } // 루프의 처음으로 점프
+                        if (this.IsMoveLockPosition(new Vector2Int(block.i_pos.x, block.i_pos.y)))
+                        { // 블록이 이동 잠금 위치에 있다면
                             continue;
                         } // 루프의 처음으로 점프
                         if (!block.isContainedPosition(mouse_position_xy))
@@ -584,11 +594,13 @@ public class BlockRoot : MonoBehaviour
     public void SetNegativeBlockPositions(HashSet<Vector2Int> positions)
     {
         this.negative_block_positions = positions;
+        this.debuff_root.InstantiateDebuff("NegativeBlock", positions);
     }
 
     public void AddNegativeBlockPosition(Vector2Int position)
     {
         this.negative_block_positions.Add(position);
+        this.debuff_root.InstantiateDebuff("NegativeBlock", new HashSet<Vector2Int> { position });
     }
      public bool IsNegativeBlockPosition(Vector2Int position)
     {
@@ -605,7 +617,51 @@ public class BlockRoot : MonoBehaviour
         this.negative_block_positions.Remove(position);
     }
 
-    // 맵 전체를 스캔하여 3매치가 발생한 블록의 색상을 안전하게 교체하는 함수
+    public void SetMoveLockPositions(HashSet<Vector2Int> positions)
+    {
+        this.move_lock_positions = positions;
+        this.debuff_root.InstantiateDebuff("MoveLock", positions);
+    }
+
+    public void AddMoveLockPosition(Vector2Int position)
+    {
+        if (this.move_lock_positions == null)
+            this.move_lock_positions = new HashSet<Vector2Int>();
+
+        this.move_lock_positions.Add(position);
+        this.debuff_root.InstantiateDebuff("MoveLock", new HashSet<Vector2Int> { position });
+    }
+
+    public bool IsMoveLockPosition(Vector2Int position)
+    {
+        if (this.move_lock_positions == null) return false;
+
+        return this.move_lock_positions.Contains(position);
+    }
+
+    public void ClearMoveLockPositions()
+    {
+        if (this.move_lock_positions != null)
+            this.move_lock_positions.Clear();
+    }
+
+    public void RemoveMoveLockPosition(Vector2Int position)
+    {
+        if (this.move_lock_positions != null)
+            this.move_lock_positions.Remove(position);
+    }
+
+    public void SetHeatTime(float time)
+    {
+        this.level_control.setVanishTime(time);
+    }
+
+    public void SetProbability(Block.COLOR color, float probability)
+    {
+        this.level_control.setProbability(color, probability);
+    }
+
+    // 맵 전체를 스캔하여 매치가 발생한 블록의 색상을 안전하게 교체하는 함수
     private void RemoveInitialMatches()
     {
         bool is_match_exists = true; // 매칭된 블록이 있는지 확인하는 플래그
@@ -623,23 +679,35 @@ public class BlockRoot : MonoBehaviour
                     Block.COLOR current_color = block.color;
                     bool is_match = false;
 
-                    // 1. 가로 검사 (왼쪽으로 연속 3개인지 확인)
-                    if (x >= 2 &&
-                        this.blocks[x - 1, y].color == current_color &&
-                        this.blocks[x - 2, y].color == current_color)
+                    // 1. 가로 검사 (왼쪽으로 연속 n개인지 확인)
+                    if (x >= (require_blocks - 1))
                     {
-                        is_match = true;
+                        for (int i = 1; i < require_blocks; i++)
+                        {
+                            if (this.blocks[x - i, y].color != current_color)
+                            {
+                                is_match = false;
+                                break;
+                            }
+                            is_match = true;
+                        }
                     }
 
-                    // 2. 세로 검사 (아래쪽으로 연속 3개인지 확인)
-                    if (!is_match && y >= 2 &&
-                        this.blocks[x, y - 1].color == current_color &&
-                        this.blocks[x, y - 2].color == current_color)
+                    // 2. 세로 검사 (아래쪽으로 연속 n개인지 확인)
+                    if (!is_match && y >= (require_blocks - 1))
                     {
-                        is_match = true;
+                        for (int i = 1; i < require_blocks; i++)
+                        {
+                            if (this.blocks[x, y - i].color != current_color)
+                            {
+                                is_match = false;
+                                break;
+                            }
+                            is_match = true;
+                        }
                     }
 
-                    // 3매치가 발견되었다면
+                    // 매치가 발견되었다면
                     if (is_match)
                     {
                         Block.COLOR new_color;

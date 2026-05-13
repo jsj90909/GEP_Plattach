@@ -29,16 +29,7 @@ public class JokerRoot : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Return))
         {
             this.score_counter.block_scores[(int)Block.COLOR.MAGENTA] = 100; // 블록 점수 변경 조커
-
-            HashSet<Vector2Int> positions = new HashSet<Vector2Int>();
-            for (int i = 0; i < Block.BLOCK_NUM_X; ++i)
-            {
-                for (int j = 0; j < Block.BLOCK_NUM_Y; ++j)
-                {
-                    positions.Add(new Vector2Int(i, j));
-                }
-            }
-            this.block_root.SetNegativeBlockPositions(positions); // 특정 구역 점수 무효화 디버프
+            this.block_root.SetProbability(Block.COLOR.MAGENTA, 15); // 블록 색상 확률 변경 조커
         }
     }
 }
