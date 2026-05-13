@@ -623,20 +623,32 @@ public class BlockRoot : MonoBehaviour
                     Block.COLOR current_color = block.color;
                     bool is_match = false;
 
-                    // 1. 가로 검사 (왼쪽으로 연속 3개인지 확인)
-                    if (x >= 2 &&
-                        this.blocks[x - 1, y].color == current_color &&
-                        this.blocks[x - 2, y].color == current_color)
+                    // 1. 가로 검사 (왼쪽으로 연속 n개인지 확인)
+                    if (x >= (require_blocks - 1))
                     {
-                        is_match = true;
+                        for (int i = 1; i < require_blocks; i++)
+                        {
+                            if (this.blocks[x - i, y].color != current_color)
+                            {
+                                is_match = false;
+                                break;
+                            }
+                            is_match = true;
+                        }
                     }
 
-                    // 2. 세로 검사 (아래쪽으로 연속 3개인지 확인)
-                    if (!is_match && y >= 2 &&
-                        this.blocks[x, y - 1].color == current_color &&
-                        this.blocks[x, y - 2].color == current_color)
+                    // 2. 세로 검사 (아래쪽으로 연속 n개인지 확인)
+                    if (!is_match && y >= (require_blocks - 1))
                     {
-                        is_match = true;
+                        for (int i = 1; i < require_blocks; i++)
+                        {
+                            if (this.blocks[x, y - i].color != current_color)
+                            {
+                                is_match = false;
+                                break;
+                            }
+                            is_match = true;
+                        }
                     }
 
                     // 3매치가 발견되었다면
