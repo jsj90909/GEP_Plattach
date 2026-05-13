@@ -38,6 +38,14 @@ public class ShopRoot : MonoBehaviour
     public GUIStyle text_style;
     public GUIStyle button_style;
 
+    private bool gui_style_initialized = false;
+
+    // UI 배치값
+    private const float CARD_WIDTH = 980.0f;
+    private const float CARD_HEIGHT = 165.0f;
+    private const float CARD_START_Y = 170.0f;
+    private const float CARD_INTERVAL = 205.0f;
+
     private class DebuffData
     {
         public string name;
@@ -115,26 +123,27 @@ public class ShopRoot : MonoBehaviour
 
     private void createGUIStyle()
     {
-        if (this.title_style != null &&
-            this.text_style != null &&
-            this.button_style != null)
+        if (this.gui_style_initialized)
         {
             return;
         }
 
         this.title_style = new GUIStyle();
-        this.title_style.fontSize = 30;
+        this.title_style.fontSize = 52;
         this.title_style.normal.textColor = Color.white;
         this.title_style.alignment = TextAnchor.MiddleCenter;
 
         this.text_style = new GUIStyle();
-        this.text_style.fontSize = 18;
+        this.text_style.fontSize = 26;
         this.text_style.normal.textColor = Color.white;
         this.text_style.wordWrap = true;
 
         // GUI.skin.button은 반드시 OnGUI 안에서만 접근해야 함
         this.button_style = new GUIStyle(GUI.skin.button);
-        this.button_style.fontSize = 16;
+        this.button_style.fontSize = 24;
+        this.button_style.alignment = TextAnchor.MiddleCenter;
+
+        this.gui_style_initialized = true;
     }
 
     private void createShopData()
@@ -173,7 +182,7 @@ public class ShopRoot : MonoBehaviour
 
         joker_list.Add(new JokerData(
             "매치 요구 수 감소",
-            "나중에 구현할 조커입니다.",
+            "아직 실제 효과는 구현하지 않은 조커입니다.",
             150
         ));
 
@@ -243,18 +252,18 @@ public class ShopRoot : MonoBehaviour
 
     private void drawBackPanel()
     {
-        GUI.color = new Color(0.0f, 0.0f, 0.0f, 0.75f);
+        GUI.color = new Color(0.0f, 0.0f, 0.0f, 0.80f);
         GUI.Box(new Rect(0, 0, Screen.width, Screen.height), "");
         GUI.color = Color.white;
 
         GUI.Label(
-            new Rect(Screen.width / 2 - 200, 30, 400, 40),
+            new Rect(Screen.width / 2 - 250, 25, 500, 60),
             "SHOP",
             this.title_style
         );
 
         GUI.Label(
-            new Rect(40, 30, 300, 30),
+            new Rect(40, 35, 400, 45),
             "Gold : " + player_gold.ToString(),
             this.text_style
         );
@@ -262,17 +271,25 @@ public class ShopRoot : MonoBehaviour
         if (this.message != "")
         {
             GUI.Label(
-                new Rect(Screen.width / 2 - 300, Screen.height - 80, 600, 50),
+                new Rect(Screen.width / 2 - 500, Screen.height - 95, 1000, 70),
                 this.message,
                 this.text_style
             );
         }
     }
 
+    private Rect getCardRect(int index)
+    {
+        float x = Screen.width / 2.0f - CARD_WIDTH / 2.0f;
+        float y = CARD_START_Y + index * CARD_INTERVAL;
+
+        return new Rect(x, y, CARD_WIDTH, CARD_HEIGHT);
+    }
+
     private void drawDebuffSelect()
     {
         GUI.Label(
-            new Rect(Screen.width / 2 - 250, 90, 500, 30),
+            new Rect(Screen.width / 2 - 350, 105, 700, 45),
             "1. 디버프 선택",
             this.text_style
         );
@@ -280,24 +297,24 @@ public class ShopRoot : MonoBehaviour
         for (int i = 0; i < debuff_list.Count; i++)
         {
             DebuffData data = debuff_list[i];
+            Rect box_rect = this.getCardRect(i);
 
-            Rect box_rect = new Rect(Screen.width / 2 - 300, 140 + i * 110, 600, 90);
             GUI.Box(box_rect, "");
 
             GUI.Label(
-                new Rect(box_rect.x + 20, box_rect.y + 10, 400, 25),
+                new Rect(box_rect.x + 30, box_rect.y + 20, 680, 35),
                 data.name,
                 this.text_style
             );
 
             GUI.Label(
-                new Rect(box_rect.x + 20, box_rect.y + 35, 400, 45),
+                new Rect(box_rect.x + 30, box_rect.y + 65, 680, 85),
                 data.description + "\n획득 골드 : +" + data.reward_gold.ToString(),
                 this.text_style
             );
 
             if (GUI.Button(
-                new Rect(box_rect.x + 450, box_rect.y + 25, 120, 40),
+                new Rect(box_rect.x + 760, box_rect.y + 52, 170, 65),
                 "선택",
                 this.button_style))
             {
@@ -309,7 +326,7 @@ public class ShopRoot : MonoBehaviour
     private void drawJokerSelect()
     {
         GUI.Label(
-            new Rect(Screen.width / 2 - 250, 90, 500, 30),
+            new Rect(Screen.width / 2 - 350, 105, 700, 45),
             "2. 조커 구매",
             this.text_style
         );
@@ -317,24 +334,24 @@ public class ShopRoot : MonoBehaviour
         for (int i = 0; i < joker_list.Count; i++)
         {
             JokerData data = joker_list[i];
+            Rect box_rect = this.getCardRect(i);
 
-            Rect box_rect = new Rect(Screen.width / 2 - 300, 140 + i * 110, 600, 90);
             GUI.Box(box_rect, "");
 
             GUI.Label(
-                new Rect(box_rect.x + 20, box_rect.y + 10, 400, 25),
+                new Rect(box_rect.x + 30, box_rect.y + 20, 680, 35),
                 data.name,
                 this.text_style
             );
 
             GUI.Label(
-                new Rect(box_rect.x + 20, box_rect.y + 35, 400, 45),
+                new Rect(box_rect.x + 30, box_rect.y + 65, 680, 85),
                 data.description + "\n가격 : -" + data.price.ToString() + " Gold",
                 this.text_style
             );
 
             if (GUI.Button(
-                new Rect(box_rect.x + 450, box_rect.y + 25, 120, 40),
+                new Rect(box_rect.x + 760, box_rect.y + 52, 170, 65),
                 "구매",
                 this.button_style))
             {
@@ -343,7 +360,7 @@ public class ShopRoot : MonoBehaviour
         }
 
         if (GUI.Button(
-            new Rect(Screen.width / 2 - 100, Screen.height - 140, 200, 40),
+            new Rect(Screen.width / 2 - 170, Screen.height - 175, 340, 65),
             "조커 구매 안 함",
             this.button_style))
         {
@@ -358,7 +375,7 @@ public class ShopRoot : MonoBehaviour
     private void drawItemSelect()
     {
         GUI.Label(
-            new Rect(Screen.width / 2 - 250, 90, 500, 30),
+            new Rect(Screen.width / 2 - 350, 105, 700, 45),
             "3. 사용 아이템 선택",
             this.text_style
         );
@@ -366,24 +383,24 @@ public class ShopRoot : MonoBehaviour
         for (int i = 0; i < item_list.Count; i++)
         {
             ItemData data = item_list[i];
+            Rect box_rect = this.getCardRect(i);
 
-            Rect box_rect = new Rect(Screen.width / 2 - 300, 140 + i * 110, 600, 90);
             GUI.Box(box_rect, "");
 
             GUI.Label(
-                new Rect(box_rect.x + 20, box_rect.y + 10, 400, 25),
+                new Rect(box_rect.x + 30, box_rect.y + 20, 680, 35),
                 data.name,
                 this.text_style
             );
 
             GUI.Label(
-                new Rect(box_rect.x + 20, box_rect.y + 35, 400, 45),
+                new Rect(box_rect.x + 30, box_rect.y + 65, 680, 85),
                 data.description + "\n가격 : 무료",
                 this.text_style
             );
 
             if (GUI.Button(
-                new Rect(box_rect.x + 450, box_rect.y + 25, 120, 40),
+                new Rect(box_rect.x + 760, box_rect.y + 52, 170, 65),
                 "선택",
                 this.button_style))
             {
@@ -394,8 +411,11 @@ public class ShopRoot : MonoBehaviour
 
     private void drawDone()
     {
+        Rect box_rect = new Rect(Screen.width / 2 - 500, 160, 1000, 420);
+        GUI.Box(box_rect, "");
+
         GUI.Label(
-            new Rect(Screen.width / 2 - 300, 120, 600, 220),
+            new Rect(box_rect.x + 40, box_rect.y + 35, 920, 350),
             "상점 선택 완료\n\n" +
             "선택한 디버프 : " + selected_debuff_name + "\n" +
             "구매한 조커 : " + selected_joker_name + "\n" +
@@ -405,7 +425,7 @@ public class ShopRoot : MonoBehaviour
         );
 
         if (GUI.Button(
-            new Rect(Screen.width / 2 - 110, Screen.height - 180, 220, 45),
+            new Rect(Screen.width / 2 - 180, Screen.height - 220, 360, 70),
             "다음 스테이지 시작",
             this.button_style))
         {
@@ -416,7 +436,7 @@ public class ShopRoot : MonoBehaviour
         }
 
         if (GUI.Button(
-            new Rect(Screen.width / 2 - 110, Screen.height - 120, 220, 45),
+            new Rect(Screen.width / 2 - 180, Screen.height - 135, 360, 70),
             "타이틀로 돌아가기",
             this.button_style))
         {
@@ -512,10 +532,9 @@ public class ShopRoot : MonoBehaviour
         }
         else if (joker_name == "매치 요구 수 감소")
         {
-            if (this.block_root != null)
-            {
-                this.block_root.SetRequireBlocks(2);
-            }
+            // 아직 구현 전
+            // require_blocks를 2로 줄이면 초기 보드 정제 기능과 충돌할 수 있으므로 일단 적용하지 않음
+            // this.block_root.SetRequireBlocks(2);
         }
     }
 
