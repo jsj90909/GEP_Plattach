@@ -478,6 +478,9 @@ public class ShopRoot : MonoBehaviour
         this.selected_item_name = data.name;
         pending_item_name = data.name;
 
+        // 인게임에서 사용할 아이템으로 등록
+        ItemRoot.SetItem(data.name);
+
         this.step = STEP.DONE;
         this.message = "상점 선택이 완료되었습니다.";
     }
