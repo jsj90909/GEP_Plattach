@@ -26,13 +26,12 @@ public class ShopRoot : MonoBehaviour
     private BlockRoot block_root = null;
     private ItemRoot item_root = null;
 
-    // 씬을 다시 로드해도 골드가 유지되도록 static 사용
-    public static int player_gold = 0;
+    public int player_gold = 0;
 
     // Enum ID로 상태 저장
-    private static DebuffType pending_debuff_id = DebuffType.NONE;
-    private static JokerType pending_joker_id = JokerType.NONE;
-    private static ItemType pending_item_id = ItemType.NONE;
+    private DebuffType pending_debuff_id = DebuffType.NONE;
+    private JokerType pending_joker_id = JokerType.NONE;
+    private ItemType pending_item_id = ItemType.NONE;
 
     private DebuffType selected_debuff_id = DebuffType.NONE;
     private JokerType selected_joker_id = JokerType.NONE;
@@ -179,25 +178,27 @@ public class ShopRoot : MonoBehaviour
     }
 
     // UI 표시용
-    public static string GetCurrentDebuffName()
+    public string GetCurrentDebuffName()
     {
         if (pending_debuff_id == DebuffType.NONE) return "없음";
-        return pending_debuff_id.ToString();
+        string display_name = this.debuff_list.Find(d => d.id == pending_debuff_id)?.name;
+        return display_name ?? pending_debuff_id.ToString();
     }
 
-    public static string GetCurrentJokerName()
+    public string GetCurrentJokerName()
     {
         if (pending_joker_id == JokerType.NONE) return "없음";
-        return pending_joker_id.ToString();
+        string display_name = this.joker_list.Find(j => j.id == pending_joker_id)?.name;
+        return display_name ?? pending_joker_id.ToString();
     }
 
-    public static string GetCurrentItemName()
+    public string GetCurrentItemName()
     {
         if (pending_item_id == ItemType.NONE) return "없음";
         return pending_item_id.ToString();
     }
 
-    public static int GetGold()
+    public int GetGold()
     {
         return player_gold;
     }
@@ -412,8 +413,7 @@ public class ShopRoot : MonoBehaviour
             "다음 스테이지 시작",
             this.button_style))
         {
-            this.step = STEP.CLOSED;
-            SceneManager.LoadScene("GameScene");
+            StageManager.Instance.NextStage();
         }
 
         if (GUI.Button(

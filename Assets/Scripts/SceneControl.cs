@@ -142,4 +142,16 @@ public class SceneControl : MonoBehaviour
         */
     }
 
+    // 스테이지 전환 시 게임 플로우 리셋
+    public void ResetForNextStage()
+    {
+        this.step_timer = 0.0f; // 경과 시간 리셋
+        this.clear_time = 0.0f;
+
+        this.block_root.enabled = true; // Clear 상태에서 꺼버렸던 BlockRoot 컴포넌트를 다시 켬
+
+        this.step = STEP.PLAY; // 상태를 다시 플레이 중으로 강제 변경
+        this.next_step = STEP.NONE;
+    }
+
 }

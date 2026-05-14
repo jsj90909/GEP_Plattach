@@ -20,6 +20,8 @@ public class ScoreCounter : MonoBehaviour
 
     void Start()
     {
+        QUOTA_SCORE = 10000;
+
         this.last.ignite = 0;
         this.last.score = 0;
         this.last.total_socre = 0;
@@ -104,5 +106,19 @@ public class ScoreCounter : MonoBehaviour
             is_clear = true;
         }
         return (is_clear);
+    }
+
+    // 다음 스테이지 진입 시 목표 점수 갱신 및 스테이지 점수 리셋
+    public void NextStageSetup(int add_quota)
+    {
+        // 목표 점수는 다음 스테이지 난이도에 맞춰 증가 (예: 10000 -> 15000)
+        QUOTA_SCORE += add_quota;
+
+        // 현재 스테이지 획득 점수 및 연쇄 수 완전히 0으로 초기화!
+        this.last.ignite = 0;
+        this.last.score = 0;
+        this.last.total_socre = 0;
+
+        Debug.Log("다음 스테이지 목표 점수: " + QUOTA_SCORE);
     }
 }

@@ -131,8 +131,7 @@ public class GameUIRoot : MonoBehaviour
 
         string joker_name = "없음";
 
-        // ShopRoot에 GetCurrentJokerName()을 추가한 경우 사용
-        joker_name = ShopRoot.GetCurrentJokerName();
+        joker_name = shop_root.GetCurrentJokerName();
 
         GUI.Label(
             this.scaleRect(x + 35.0f, y + 145.0f, w - 70.0f, 80.0f),
@@ -207,8 +206,7 @@ public class GameUIRoot : MonoBehaviour
 
         string debuff_name = "없음";
 
-        // ShopRoot에 GetCurrentDebuffName()을 추가한 경우 사용
-        debuff_name = ShopRoot.GetCurrentDebuffName();
+        debuff_name = this.shop_root.GetCurrentDebuffName();
 
         GUI.Label(
             this.scaleRect(x + 35.0f, y + 145.0f, w - 70.0f, 80.0f),

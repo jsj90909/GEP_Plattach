@@ -740,4 +740,23 @@ public class BlockRoot : MonoBehaviour
 
         return false;
     }
+
+    // 씬에 배치된 기존 블록들을 완전히 파괴하고 배열을 초기화하는 메서드
+    public void ClearBoard()
+    {
+        if (this.blocks != null)
+        {
+            for (int y = 0; y < Block.BLOCK_NUM_Y; ++y)
+            {
+                for (int x = 0; x < Block.BLOCK_NUM_X; ++x)
+                {
+                    if (this.blocks[x, y] != null)
+                    {
+                        Destroy(this.blocks[x, y].gameObject);
+                    }
+                }
+            }
+            this.blocks = null; // 가비지 컬렉터 유도 및 배열 리셋
+        }
+    }
 }
