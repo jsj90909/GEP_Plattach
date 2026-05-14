@@ -95,6 +95,7 @@ public class ShopRoot : MonoBehaviour
     {
         this.score_counter = this.gameObject.GetComponent<ScoreCounter>();
         this.block_root = this.gameObject.GetComponent<BlockRoot>();
+        this.item_root = this.gameObject.GetComponent<ItemRoot>();
 
         this.createShopData();
 
@@ -149,7 +150,6 @@ public class ShopRoot : MonoBehaviour
 
     private void createShopData()
     {
-        // 디버프 선택지
         debuff_list.Add(new DebuffData(
             "불타는 시간 감소",
             "다음 스테이지에서 블록이 더 빨리 사라집니다.",
@@ -168,7 +168,6 @@ public class ShopRoot : MonoBehaviour
             200
         ));
 
-        // 조커 선택지
         joker_list.Add(new JokerData(
             "파란색 블록 점수 증가",
             "파란색 블록 점수를 100점으로 변경합니다.",
@@ -187,7 +186,6 @@ public class ShopRoot : MonoBehaviour
             150
         ));
 
-        // 사용 아이템 선택지
         item_list.Add(new ItemData(
             "셔플",
             "나중에 블록을 섞는 아이템으로 구현할 예정입니다."
@@ -218,6 +216,41 @@ public class ShopRoot : MonoBehaviour
     public bool IsOpen()
     {
         return this.step != STEP.CLOSED;
+    }
+
+    public static string GetCurrentDebuffName()
+    {
+        if (pending_debuff_name == "")
+        {
+            return "없음";
+        }
+
+        return pending_debuff_name;
+    }
+
+    public static string GetCurrentJokerName()
+    {
+        if (pending_joker_name == "")
+        {
+            return "없음";
+        }
+
+        return pending_joker_name;
+    }
+
+    public static string GetCurrentItemName()
+    {
+        if (pending_item_name == "")
+        {
+            return "없음";
+        }
+
+        return pending_item_name;
+    }
+
+    public static int GetGold()
+    {
+        return player_gold;
     }
 
     void OnGUI()
@@ -479,8 +512,19 @@ public class ShopRoot : MonoBehaviour
         this.selected_item_name = data.name;
         pending_item_name = data.name;
 
-        // 인게임에서 사용할 아이템으로 등록
-        item_root.SetItem(data.name);
+        if (this.item_root == null)
+        {
+            this.item_root = this.gameObject.GetComponent<ItemRoot>();
+        }
+
+        if (this.item_root != null)
+        {
+            this.item_root.SetItem(data.name);
+        }
+        else
+        {
+            Debug.LogWarning("[ShopRoot] ItemRoot가 없습니다. GameRoot에 ItemRoot 컴포넌트를 추가하세요.");
+        }
 
         this.step = STEP.DONE;
         this.message = "상점 선택이 완료되었습니다.";
@@ -510,7 +554,7 @@ public class ShopRoot : MonoBehaviour
         }
         else if (debuff_name == "불타는 시간 감소")
         {
-            this.block_root.SetHeatTime(1.5f); // 예시: 히트 타임을 1.5초로 감소
+            this.block_root.SetHeatTime(1.5f);
         }
     }
 
@@ -536,14 +580,29 @@ public class ShopRoot : MonoBehaviour
         }
         else if (joker_name == "매치 요구 수 감소")
         {
-            this.block_root.SetRequireBlocks(2);
+            if (this.block_root != null)
+            {
+                this.block_root.SetRequireBlocks(2);
+            }
         }
     }
 
     private void applyItemByName(string item_name)
     {
-        // 아직 사용 아이템 구현 전
-        // 지금은 선택 이름만 static으로 저장해두는 상태
+        if (item_name == "")
+        {
+            return;
+        }
+
+        if (this.item_root == null)
+        {
+            this.item_root = this.gameObject.GetComponent<ItemRoot>();
+        }
+
+        if (this.item_root != null)
+        {
+            this.item_root.SetItem(item_name);
+        }
 
         if (item_name == "셔플")
         {

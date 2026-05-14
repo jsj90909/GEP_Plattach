@@ -91,9 +91,11 @@ public class SceneControl : MonoBehaviour
         }
     }
 
+    
     // 화면에 클리어한 시간과 메시지를 표시
     void OnGUI()
     {
+        /*
         switch (this.step)
         {
             case STEP.PLAY:
@@ -129,5 +131,7 @@ public class SceneControl : MonoBehaviour
                 GUI.color = Color.white;
                 break;
         }
+        */
     }
+
 }
