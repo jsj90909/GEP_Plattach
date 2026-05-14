@@ -3,6 +3,11 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
+// 상점 아이템 식별을 위한 Enum 정의
+public enum DebuffType { NONE, HEAT_TIME_DECREASE, SCORE_NULLIFY, REQUIRE_MATCH_4 }
+public enum JokerType { NONE, BLUE_SCORE_UP, MAGENTA_SCORE_UP, REQUIRE_MATCH_2 }
+public enum ItemType { NONE, SHUFFLE, TIME_STOP, BOMB }
+
 public class ShopRoot : MonoBehaviour
 {
     public enum STEP
@@ -24,14 +29,14 @@ public class ShopRoot : MonoBehaviour
     // 씬을 다시 로드해도 골드가 유지되도록 static 사용
     public static int player_gold = 0;
 
-    // 다음 스테이지에 적용할 선택 결과 저장
-    private static string pending_debuff_name = "";
-    private static string pending_joker_name = "";
-    private static string pending_item_name = "";
+    // Enum ID로 상태 저장
+    private static DebuffType pending_debuff_id = DebuffType.NONE;
+    private static JokerType pending_joker_id = JokerType.NONE;
+    private static ItemType pending_item_id = ItemType.NONE;
 
-    private string selected_debuff_name = "";
-    private string selected_joker_name = "";
-    private string selected_item_name = "";
+    private DebuffType selected_debuff_id = DebuffType.NONE;
+    private JokerType selected_joker_id = JokerType.NONE;
+    private ItemType selected_item_id = ItemType.NONE;
 
     private string message = "";
 
@@ -49,12 +54,14 @@ public class ShopRoot : MonoBehaviour
 
     private class DebuffData
     {
+        public DebuffType id;
         public string name;
         public string description;
         public int reward_gold;
 
-        public DebuffData(string name, string description, int reward_gold)
+        public DebuffData(DebuffType id, string name, string description, int reward_gold)
         {
+            this.id = id;
             this.name = name;
             this.description = description;
             this.reward_gold = reward_gold;
@@ -63,12 +70,14 @@ public class ShopRoot : MonoBehaviour
 
     private class JokerData
     {
+        public JokerType id;
         public string name;
         public string description;
         public int price;
 
-        public JokerData(string name, string description, int price)
+        public JokerData(JokerType id, string name, string description, int price)
         {
+            this.id = id;
             this.name = name;
             this.description = description;
             this.price = price;
@@ -77,11 +86,13 @@ public class ShopRoot : MonoBehaviour
 
     private class ItemData
     {
+        public ItemType id;
         public string name;
         public string description;
 
-        public ItemData(string name, string description)
+        public ItemData(ItemType id, string name, string description)
         {
+            this.id = id;
             this.name = name;
             this.description = description;
         }
@@ -95,31 +106,21 @@ public class ShopRoot : MonoBehaviour
     {
         this.score_counter = this.gameObject.GetComponent<ScoreCounter>();
         this.block_root = this.gameObject.GetComponent<BlockRoot>();
+        this.item_root = this.gameObject.GetComponent<ItemRoot>();
 
         this.createShopData();
-
-        // GameScene을 다시 로드한 뒤, 이전 상점 선택 효과를 다음 프레임에 적용
-        StartCoroutine(this.applyPendingEffectsNextFrame());
     }
 
-    private IEnumerator applyPendingEffectsNextFrame()
+    // 다음 스테이지 보드 생성 전(SceneControl.Start) 호출될 효과 적용 메서드
+    public void ApplyPendingEffects()
     {
-        yield return null;
+        if (this.block_root == null) this.block_root = this.gameObject.GetComponent<BlockRoot>();
+        if (this.score_counter == null) this.score_counter = this.gameObject.GetComponent<ScoreCounter>();
+        if (this.item_root == null) this.item_root = this.gameObject.GetComponent<ItemRoot>();
 
-        if (pending_debuff_name != "")
-        {
-            this.applyDebuffByName(pending_debuff_name);
-        }
-
-        if (pending_joker_name != "")
-        {
-            this.applyJokerByName(pending_joker_name);
-        }
-
-        if (pending_item_name != "")
-        {
-            this.applyItemByName(pending_item_name);
-        }
+        this.applyDebuffById(pending_debuff_id);
+        this.applyJokerById(pending_joker_id);
+        this.applyItemById(pending_item_id);
     }
 
     private void createGUIStyle()
@@ -139,7 +140,6 @@ public class ShopRoot : MonoBehaviour
         this.text_style.normal.textColor = Color.white;
         this.text_style.wordWrap = true;
 
-        // GUI.skin.button은 반드시 OnGUI 안에서만 접근해야 함
         this.button_style = new GUIStyle(GUI.skin.button);
         this.button_style.fontSize = 24;
         this.button_style.alignment = TextAnchor.MiddleCenter;
@@ -149,68 +149,26 @@ public class ShopRoot : MonoBehaviour
 
     private void createShopData()
     {
-        // 디버프 선택지
-        debuff_list.Add(new DebuffData(
-            "불타는 시간 감소",
-            "다음 스테이지에서 블록이 더 빨리 사라집니다.",
-            100
-        ));
+        debuff_list.Add(new DebuffData(DebuffType.HEAT_TIME_DECREASE, "불타는 시간 감소", "다음 스테이지에서 블록이 더 빨리 사라집니다.", 100));
+        debuff_list.Add(new DebuffData(DebuffType.SCORE_NULLIFY, "특정 구역 점수 무효화", "다음 스테이지에서 일부 구역의 블록 점수가 무효화됩니다.", 150));
+        debuff_list.Add(new DebuffData(DebuffType.REQUIRE_MATCH_4, "4개 매치 필요", "다음 스테이지에서 4개 이상 연결해야 점수가 납니다.", 200));
 
-        debuff_list.Add(new DebuffData(
-            "특정 구역 점수 무효화",
-            "다음 스테이지에서 일부 구역의 블록 점수가 무효화됩니다.",
-            150
-        ));
+        joker_list.Add(new JokerData(JokerType.BLUE_SCORE_UP, "파란색 블록 점수 증가", "파란색 블록 점수를 100점으로 변경합니다.", 100));
+        joker_list.Add(new JokerData(JokerType.MAGENTA_SCORE_UP, "마젠타 블록 점수 증가", "마젠타 블록 점수를 100점으로 변경합니다.", 120));
+        joker_list.Add(new JokerData(JokerType.REQUIRE_MATCH_2, "매치 요구 수 감소", "다음 스테이지에서 2개만 연결하면 점수가 납니다.", 150));
 
-        debuff_list.Add(new DebuffData(
-            "4개 매치 필요",
-            "다음 스테이지에서 3개가 아니라 4개 이상 연결해야 점수가 납니다.",
-            200
-        ));
-
-        // 조커 선택지
-        joker_list.Add(new JokerData(
-            "파란색 블록 점수 증가",
-            "파란색 블록 점수를 100점으로 변경합니다.",
-            100
-        ));
-
-        joker_list.Add(new JokerData(
-            "마젠타 블록 점수 증가",
-            "마젠타 블록 점수를 100점으로 변경합니다.",
-            120
-        ));
-
-        joker_list.Add(new JokerData(
-            "매치 요구 수 감소",
-            "다음 스테이지에서 2개만 연결하면 점수가 납니다.",
-            150
-        ));
-
-        // 사용 아이템 선택지
-        item_list.Add(new ItemData(
-            "셔플",
-            "나중에 블록을 섞는 아이템으로 구현할 예정입니다."
-        ));
-
-        item_list.Add(new ItemData(
-            "시간 정지",
-            "나중에 일정 시간 타이머를 멈추는 아이템으로 구현할 예정입니다."
-        ));
-
-        item_list.Add(new ItemData(
-            "폭탄",
-            "나중에 특정 위치 주변 블록을 제거하는 아이템으로 구현할 예정입니다."
-        ));
+        item_list.Add(new ItemData(ItemType.SHUFFLE, "셔플", "나중에 블록을 섞는 아이템으로 구현할 예정입니다."));
+        item_list.Add(new ItemData(ItemType.TIME_STOP, "시간 정지", "나중에 일정 시간 타이머를 멈추는 아이템으로 구현할 예정입니다."));
+        item_list.Add(new ItemData(ItemType.BOMB, "폭탄", "나중에 특정 위치 주변 블록을 제거하는 아이템으로 구현할 예정입니다."));
     }
 
     public void OpenShop()
     {
         this.step = STEP.DEBUFF_SELECT;
 
-        this.selected_debuff_name = "";
-        this.selected_joker_name = "";
-        this.selected_item_name = "";
+        this.selected_debuff_id = DebuffType.NONE;
+        this.selected_joker_id = JokerType.NONE;
+        this.selected_item_id = ItemType.NONE;
 
         this.message = "디버프를 선택하면 골드를 받습니다.";
     }
@@ -218,6 +176,30 @@ public class ShopRoot : MonoBehaviour
     public bool IsOpen()
     {
         return this.step != STEP.CLOSED;
+    }
+
+    // UI 표시용
+    public static string GetCurrentDebuffName()
+    {
+        if (pending_debuff_id == DebuffType.NONE) return "없음";
+        return pending_debuff_id.ToString();
+    }
+
+    public static string GetCurrentJokerName()
+    {
+        if (pending_joker_id == JokerType.NONE) return "없음";
+        return pending_joker_id.ToString();
+    }
+
+    public static string GetCurrentItemName()
+    {
+        if (pending_item_id == ItemType.NONE) return "없음";
+        return pending_item_id.ToString();
+    }
+
+    public static int GetGold()
+    {
+        return player_gold;
     }
 
     void OnGUI()
@@ -365,8 +347,8 @@ public class ShopRoot : MonoBehaviour
             "조커 구매 안 함",
             this.button_style))
         {
-            this.selected_joker_name = "구매 안 함";
-            pending_joker_name = "";
+            this.selected_joker_id = JokerType.NONE;
+            pending_joker_id = JokerType.NONE;
 
             this.step = STEP.ITEM_SELECT;
             this.message = "사용 아이템은 무료로 하나 선택합니다.";
@@ -418,9 +400,9 @@ public class ShopRoot : MonoBehaviour
         GUI.Label(
             new Rect(box_rect.x + 40, box_rect.y + 35, 920, 350),
             "상점 선택 완료\n\n" +
-            "선택한 디버프 : " + selected_debuff_name + "\n" +
-            "구매한 조커 : " + selected_joker_name + "\n" +
-            "선택한 사용 아이템 : " + selected_item_name + "\n\n" +
+            "선택한 디버프 : " + selected_debuff_id.ToString() + "\n" +
+            "구매한 조커 : " + selected_joker_id.ToString() + "\n" +
+            "선택한 사용 아이템 : " + selected_item_id.ToString() + "\n\n" +
             "현재 골드 : " + player_gold.ToString(),
             this.text_style
         );
@@ -431,8 +413,6 @@ public class ShopRoot : MonoBehaviour
             this.button_style))
         {
             this.step = STEP.CLOSED;
-
-            // 아직 스테이지 시스템이 따로 없으므로 GameScene 재시작
             SceneManager.LoadScene("GameScene");
         }
 
@@ -448,8 +428,8 @@ public class ShopRoot : MonoBehaviour
 
     private void selectDebuff(DebuffData data)
     {
-        this.selected_debuff_name = data.name;
-        pending_debuff_name = data.name;
+        this.selected_debuff_id = data.id;
+        pending_debuff_id = data.id;
 
         player_gold += data.reward_gold;
 
@@ -465,8 +445,8 @@ public class ShopRoot : MonoBehaviour
             return;
         }
 
-        this.selected_joker_name = data.name;
-        pending_joker_name = data.name;
+        this.selected_joker_id = data.id;
+        pending_joker_id = data.id;
 
         player_gold -= data.price;
 
@@ -476,86 +456,79 @@ public class ShopRoot : MonoBehaviour
 
     private void selectItem(ItemData data)
     {
-        this.selected_item_name = data.name;
-        pending_item_name = data.name;
+        this.selected_item_id = data.id;
+        pending_item_id = data.id;
 
-        // 인게임에서 사용할 아이템으로 등록
-        item_root.SetItem(data.name);
+        if (this.item_root == null)
+        {
+            this.item_root = this.gameObject.GetComponent<ItemRoot>();
+        }
+
+        if (this.item_root != null)
+        {
+            // ItemRoot는 아직 Name 기반을 쓰고 있으므로 그대로 유지
+            this.item_root.SetItem(data.name);
+        }
 
         this.step = STEP.DONE;
         this.message = "상점 선택이 완료되었습니다.";
     }
 
-    private void applyDebuffByName(string debuff_name)
+    private void applyDebuffById(DebuffType debuff_id)
     {
-        if (this.block_root == null)
-        {
-            return;
-        }
+        if (this.block_root == null) return;
 
-        if (debuff_name == "특정 구역 점수 무효화")
+        switch (debuff_id)
         {
-            // 예시: 왼쪽 아래 3칸 점수 무효화
-            HashSet<Vector2Int> positions = new HashSet<Vector2Int>();
-
-            positions.Add(new Vector2Int(0, 0));
-            positions.Add(new Vector2Int(1, 0));
-            positions.Add(new Vector2Int(2, 0));
-
-            this.block_root.SetNegativeBlockPositions(positions);
-        }
-        else if (debuff_name == "4개 매치 필요")
-        {
-            this.block_root.SetRequireBlocks(4);
-        }
-        else if (debuff_name == "불타는 시간 감소")
-        {
-            this.block_root.SetHeatTime(1.5f); // 예시: 히트 타임을 1.5초로 감소
+            case DebuffType.SCORE_NULLIFY:
+                HashSet<Vector2Int> positions = new HashSet<Vector2Int> { new Vector2Int(0, 0), new Vector2Int(1, 0), new Vector2Int(2, 0) };
+                this.block_root.SetNegativeBlockPositions(positions);
+                break;
+            case DebuffType.REQUIRE_MATCH_4:
+                this.block_root.SetRequireBlocks(4);
+                break;
+            case DebuffType.HEAT_TIME_DECREASE:
+                this.block_root.SetHeatTime(1.5f);
+                break;
         }
     }
 
-    private void applyJokerByName(string joker_name)
+    private void applyJokerById(JokerType joker_id)
     {
-        if (this.score_counter == null)
-        {
-            return;
-        }
+        if (this.score_counter == null || this.score_counter.block_scores == null) return;
 
-        if (this.score_counter.block_scores == null)
+        switch (joker_id)
         {
-            return;
-        }
-
-        if (joker_name == "파란색 블록 점수 증가")
-        {
-            this.score_counter.block_scores[(int)Block.COLOR.BLUE] = 100;
-        }
-        else if (joker_name == "마젠타 블록 점수 증가")
-        {
-            this.score_counter.block_scores[(int)Block.COLOR.MAGENTA] = 100;
-        }
-        else if (joker_name == "매치 요구 수 감소")
-        {
-            this.block_root.SetRequireBlocks(2);
+            case JokerType.BLUE_SCORE_UP:
+                this.score_counter.block_scores[(int)Block.COLOR.BLUE] = 100;
+                break;
+            case JokerType.MAGENTA_SCORE_UP:
+                this.score_counter.block_scores[(int)Block.COLOR.MAGENTA] = 100;
+                break;
+            case JokerType.REQUIRE_MATCH_2:
+                if (this.block_root != null)
+                {
+                    this.block_root.SetRequireBlocks(2);
+                }
+                break;
         }
     }
 
-    private void applyItemByName(string item_name)
+    private void applyItemById(ItemType item_id)
     {
-        // 아직 사용 아이템 구현 전
-        // 지금은 선택 이름만 static으로 저장해두는 상태
+        if (item_id == ItemType.NONE) return;
 
-        if (item_name == "셔플")
+        switch (item_id)
         {
-            // TODO: 셔플 아이템 구현
-        }
-        else if (item_name == "시간 정지")
-        {
-            // TODO: 시간 정지 아이템 구현
-        }
-        else if (item_name == "폭탄")
-        {
-            // TODO: 폭탄 아이템 구현
+            case ItemType.SHUFFLE:
+                // TODO: 셔플 아이템 구현
+                break;
+            case ItemType.TIME_STOP:
+                // TODO: 시간 정지 아이템 구현
+                break;
+            case ItemType.BOMB:
+                // TODO: 폭탄 아이템 구현
+                break;
         }
     }
 }

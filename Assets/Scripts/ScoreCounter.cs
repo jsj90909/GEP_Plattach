@@ -31,6 +31,7 @@ public class ScoreCounter : MonoBehaviour
     }
     void OnGUI()
     { // 화면에 텍스트와 이미지 표시
+        /*
         int x = 20;
         int y = 50;
         GUI.color = Color.black;
@@ -40,15 +41,18 @@ public class ScoreCounter : MonoBehaviour
         y += 30;
         this.print_value(x + 20, y, "합계 스코어", this.last.total_socre);
         y += 30;
+        */
     }
 
     // 지정된 두 개의 데이터를 두 개의 행에 나눠 표시.
     public void print_value(int x, int y, string label, int value)
     {
+        /*
         GUI.Label(new Rect(x, y, 100, 20), label, guistyle); // label을 표시
         y += 15;
         GUI.Label(new Rect(x + 20, y, 100, 20), value.ToString(), guistyle); // 다음 행에 value를 표시
         y += 15;
+        */
     }
     // 연쇄 횟수를 가산
     public void addIgniteCount(int count)
@@ -62,7 +66,7 @@ public class ScoreCounter : MonoBehaviour
         int[] finalscore = new int[blockcolors.Length];
         for (int i = 0; i < blockcolors.Length; ++i)
         {
-            finalscore[i] = block_scores[i]*blockcolors[i];
+            finalscore[i] = block_scores[i] * blockcolors[i];
         }
         this.update_score2(finalscore); // 점수 계산
     }

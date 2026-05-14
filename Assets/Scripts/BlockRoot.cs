@@ -26,7 +26,7 @@ public class BlockRoot : MonoBehaviour
 
     private JokerRoot joker_root = null;
     private DebuffRoot debuff_root = null;
-    void Start()
+    void Awake()
     {
         this.main_camera = GameObject.FindGameObjectWithTag("MainCamera"); // 카메라로부터 마우스 커서를 통과하는 광선을 쏘기 위해서 필요
         this.score_counter = this.gameObject.GetComponent<ScoreCounter>();
@@ -358,19 +358,21 @@ public class BlockRoot : MonoBehaviour
         }
         int rx = start.i_pos.x; // 그리드 좌표를 기억해 둔다
         int lx = start.i_pos.x;
-        for (int x = lx - 1; x > 0; x--)
-        { // 블록의 왼쪽을 검사
+
+        // 수정됨: x > 0 을 x >= 0 으로 변경 (왼쪽 끝줄인 0번 인덱스도 검사하도록)
+        for (int x = lx - 1; x >= 0; x--)
+        {
             BlockControl next_block = this.blocks[x, start.i_pos.y];
-            if (next_block.color != start.color) { break; } // 색이 다르면, 루프를 빠져나간다
-            if (next_block.step == Block.STEP.FALL || next_block.next_step == Block.STEP.FALL) { break; } // 낙하 중이면, 루프를 빠져나간다
-            if (next_block.step == Block.STEP.SLIDE || next_block.next_step == Block.STEP.SLIDE) { break; } // 슬라이드 중이면, 루프를 빠져나간다
+            if (next_block.color != start.color) { break; }
+            if (next_block.step == Block.STEP.FALL || next_block.next_step == Block.STEP.FALL) { break; }
+            if (next_block.step == Block.STEP.SLIDE || next_block.next_step == Block.STEP.SLIDE) { break; }
             if (!next_block.isVanishing())
-            { // 불붙은 상태가 아니면
+            {
                 normal_block_num++;
-            } // 검사용 카운터를 증가
+            }
             lx = x;
         }
-        for (int x = rx + 1; x < Block.BLOCK_NUM_X; x ++)
+        for (int x = rx + 1; x < Block.BLOCK_NUM_X; x++)
         { // 블록의 오른쪽을 검사
             BlockControl next_block = this.blocks[x, start.i_pos.y];
             if (next_block.color != start.color) { break; }
@@ -381,10 +383,10 @@ public class BlockRoot : MonoBehaviour
         }
         do
         {
-            if (rx - lx + 1 < require_blocks) { break; } // 오른쪽 블록의 그리드 번호 - 왼쪽 블록의 그리드 번호 + 중앙 블록(1)을 더한 수가 3 미만이면, 루프 탈출
-            if (normal_block_num == 0) { break; } // 불붙지 않은 블록이 하나도 없으면, 루프 탈출
-            for (int x = lx; x < rx + 1; x ++)
-            { // 나열된 같은 색 블록을 불붙은 상태로
+            if (rx - lx + 1 < require_blocks) { break; }
+            if (normal_block_num == 0) { break; }
+            for (int x = lx; x < rx + 1; x++)
+            {
                 this.blocks[x, start.i_pos.y].toVanishing();
                 ret = true;
             }
@@ -397,8 +399,10 @@ public class BlockRoot : MonoBehaviour
         }
         int uy = start.i_pos.y;
         int dy = start.i_pos.y;
-        for (int y = dy - 1; y > 0; y--)
-        { // 블록의 위쪽을 검사.
+
+        // 수정됨: y > 0 을 y >= 0 으로 변경 (아래쪽 끝줄인 0번 인덱스도 검사하도록)
+        for (int y = dy - 1; y >= 0; y--)
+        {
             BlockControl next_block = this.blocks[start.i_pos.x, y];
             if (next_block.color != start.color) { break; }
             if (next_block.step == Block.STEP.FALL || next_block.next_step == Block.STEP.FALL) { break; }
@@ -406,8 +410,8 @@ public class BlockRoot : MonoBehaviour
             if (!next_block.isVanishing()) { normal_block_num++; }
             dy = y;
         }
-        for (int y = uy + 1; y < Block.BLOCK_NUM_Y; y ++)
-        { // 블록의 아래쪽을 검사.
+        for (int y = uy + 1; y < Block.BLOCK_NUM_Y; y++)
+        { // 블록의 위쪽을 검사.
             BlockControl next_block = this.blocks[start.i_pos.x, y];
             if (next_block.color != start.color) { break; }
             if (next_block.step == Block.STEP.FALL || next_block.next_step == Block.STEP.FALL) { break; }
@@ -664,69 +668,76 @@ public class BlockRoot : MonoBehaviour
     // 맵 전체를 스캔하여 매치가 발생한 블록의 색상을 안전하게 교체하는 함수
     private void RemoveInitialMatches()
     {
-        bool is_match_exists = true; // 매칭된 블록이 있는지 확인하는 플래그
-
-        // 매칭된 블록이 하나도 없을 때까지 반복 검사
-        while (is_match_exists)
+        for (int y = 0; y < Block.BLOCK_NUM_Y; y++)
         {
-            is_match_exists = false; // 일단 없다고 가정하고 시작
-
-            for (int y = 0; y < Block.BLOCK_NUM_Y; y++)
+            for (int x = 0; x < Block.BLOCK_NUM_X; x++)
             {
-                for (int x = 0; x < Block.BLOCK_NUM_X; x++)
+                BlockControl block = this.blocks[x, y];
+
+                // 현재 블록이 매치를 유발하는지 확인
+                if (CheckMatchAt(x, y, block.color))
                 {
-                    BlockControl block = this.blocks[x, y];
-                    Block.COLOR current_color = block.color;
-                    bool is_match = false;
+                    List<Block.COLOR> safeColors = new List<Block.COLOR>();
 
-                    // 1. 가로 검사 (왼쪽으로 연속 n개인지 확인)
-                    if (x >= (require_blocks - 1))
+                    // 사용 가능한 모든 색상 중에서 현재 위치에 두어도 안전한 색상만 추려냅니다.
+                    for (int c = 0; c < (int)Block.COLOR.NORMAL_COLOR_NUM; c++)
                     {
-                        for (int i = 1; i < require_blocks; i++)
+                        Block.COLOR testColor = (Block.COLOR)c;
+                        if (!CheckMatchAt(x, y, testColor))
                         {
-                            if (this.blocks[x - i, y].color != current_color)
-                            {
-                                is_match = false;
-                                break;
-                            }
-                            is_match = true;
+                            safeColors.Add(testColor);
                         }
                     }
 
-                    // 2. 세로 검사 (아래쪽으로 연속 n개인지 확인)
-                    if (!is_match && y >= (require_blocks - 1))
+                    // 안전한 색상 리스트 중에서 하나를 무작위로 선택하여 적용
+                    if (safeColors.Count > 0)
                     {
-                        for (int i = 1; i < require_blocks; i++)
-                        {
-                            if (this.blocks[x, y - i].color != current_color)
-                            {
-                                is_match = false;
-                                break;
-                            }
-                            is_match = true;
-                        }
+                        Block.COLOR safeColor = safeColors[Random.Range(0, safeColors.Count)];
+                        block.setColor(safeColor);
                     }
-
-                    // 매치가 발견되었다면
-                    if (is_match)
+                    else
                     {
-                        Block.COLOR new_color;
-
-                        // 현재 색상과 다른 색상이 나올 때까지 랜덤 뽑기
-                        do
-                        {
-                            new_color = this.selectBlockColor();
-                        } while (new_color == current_color);
-
-                        // 블록 색상 변경
-                        block.setColor(new_color);
-
-                        // 색상을 바꿨으므로, 이 변경으로 인해 다른 곳에서 
-                        // 우연히 새로운 매칭이 발생했을 수 있으니 다시 전체 검사하도록 플래그 설정
-                        is_match_exists = true;
+                        // (예외 처리) 모든 색상이 겹치는 극한의 상황이라면 기본 무작위 색상 적용
+                        block.setColor(this.selectBlockColor());
                     }
                 }
             }
         }
+    }
+
+    // 특정 위치(x, y)에 특정 색상(colorToCheck)을 놓았을 때 매치가 발생하는지 검사하는 헬퍼 함수
+    private bool CheckMatchAt(int x, int y, Block.COLOR colorToCheck)
+    {
+        // 1. 가로 검사 (왼쪽으로 연속 require_blocks - 1 개가 같은 색인지 확인)
+        if (x >= (require_blocks - 1))
+        {
+            bool match_x = true;
+            for (int i = 1; i < require_blocks; i++)
+            {
+                if (this.blocks[x - i, y].color != colorToCheck)
+                {
+                    match_x = false;
+                    break;
+                }
+            }
+            if (match_x) return true;
+        }
+
+        // 2. 세로 검사 (아래쪽으로 연속 require_blocks - 1 개가 같은 색인지 확인)
+        if (y >= (require_blocks - 1))
+        {
+            bool match_y = true;
+            for (int i = 1; i < require_blocks; i++)
+            {
+                if (this.blocks[x, y - i].color != colorToCheck)
+                {
+                    match_y = false;
+                    break;
+                }
+            }
+            if (match_y) return true;
+        }
+
+        return false;
     }
 }

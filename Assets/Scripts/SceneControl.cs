@@ -29,11 +29,19 @@ public class SceneControl : MonoBehaviour
         this.block_root = this.gameObject.GetComponent<BlockRoot>();
         this.block_root.create(); // create() 메서드에서 초기 설정
 
-        // BlockRoot 스크립트의 initialSetUp()을 호출
+        // 1. 상점 루트를 먼저 가져옵니다.
+        this.shop_root = this.gameObject.GetComponent<ShopRoot>();
+
+        // 2. 보드를 생성하기 '전'에 상점의 이월된 효과(require_blocks 변경 등)를 미리 적용합니다.
+        if (this.shop_root != null)
+        {
+            this.shop_root.ApplyPendingEffects();
+        }
+
+        // 3. 이제 변경된 상태를 기반으로 BlockRoot 스크립트의 initialSetUp()을 호출
         this.block_root.initialSetUp();
 
         this.score_counter = this.gameObject.GetComponent<ScoreCounter>(); // ScoreCounter 가져오기
-        this.shop_root = this.gameObject.GetComponent<ShopRoot>(); // ShopRoot 가져오기
 
         this.next_step = STEP.PLAY; // 다음 상태를 '플레이 중'으로
         this.guistyle.fontSize = 24; // 폰트 크기를 24로
@@ -91,9 +99,11 @@ public class SceneControl : MonoBehaviour
         }
     }
 
+
     // 화면에 클리어한 시간과 메시지를 표시
     void OnGUI()
     {
+        /*
         switch (this.step)
         {
             case STEP.PLAY:
@@ -129,5 +139,7 @@ public class SceneControl : MonoBehaviour
                 GUI.color = Color.white;
                 break;
         }
+        */
     }
+
 }

@@ -28,8 +28,19 @@ public class JokerRoot : MonoBehaviour
         //}
         if (Input.GetKeyDown(KeyCode.Return))
         {
-            this.score_counter.block_scores[(int)Block.COLOR.MAGENTA] = 100; // 블록 점수 변경 조커
+            this.score_counter.block_scores[(int)Block.COLOR.BLUE] = 10000; // 블록 점수 변경 조커
             this.block_root.SetProbability(Block.COLOR.MAGENTA, 15); // 블록 색상 확률 변경 조커
+
+            Debug.Log("Block Scores: " + FormatBlockScores());
         }
+    }
+
+    private string FormatBlockScores()
+    {
+        string[] block_score_strings = new string[this.score_counter.block_scores.Length];
+        for (int i = 0; i < this.score_counter.block_scores.Length; ++i)
+            block_score_strings[i] = $"{(Block.COLOR)i}: {this.score_counter.block_scores[i]}";
+
+        return string.Join(" | ", block_score_strings);
     }
 }

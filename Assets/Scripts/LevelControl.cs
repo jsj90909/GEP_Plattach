@@ -101,12 +101,30 @@ public class LevelControl
             this.level_datas.Add(new LevelData());
         }
     }
+
+    // 기존의 무작위 선택 함수
     public void selectLevel()
-    { // 몇 개의 레벨 패턴에서 지금 사용할 패턴을 선택
-      // 0~패턴 사이의 값을 임의로 선택
+    {
         this.select_level = Random.Range(0, this.level_datas.Count);
         Debug.Log("select level = " + this.select_level.ToString());
     }
+
+    // 추가된 부분: 스테이지 번호 등에 맞춰 특정 레벨을 직접 선택하는 함수
+    public void selectLevel(int level_index)
+    {
+        if (this.level_datas == null || this.level_datas.Count == 0) return;
+
+        if (level_index < 0 || level_index >= this.level_datas.Count)
+        {
+            this.selectLevel(); // 범위를 벗어나면 무작위 선택으로 대체
+        }
+        else
+        {
+            this.select_level = level_index;
+        }
+        Debug.Log("select level = " + this.select_level.ToString());
+    }
+
     public LevelData getCurrentLevelData()
     { // 선택되어 있는 레벨 패턴의 레벨 데이터를 반환
       // 선택된 패턴의 레벨 데이터를 반환
