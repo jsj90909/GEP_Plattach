@@ -460,7 +460,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   moveLockPrefab: {fileID: 4736098973459045742, guid: 03738bb3c458e3946be1196ef33e1df3, type: 3}
-  scoreNullPrefab: {fileID: 3971654293411556540, guid: 7123cc45ea83a4b4eacec962b916c816, type: 3}
+  scoreNullPrefab: {fileID: 2778661828609137911, guid: 26dff46c945277e4da18e3992bff1076, type: 3}
 --- !u!114 &860052430
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -474,6 +474,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   step: 0
+  player_gold: 0
   title_style:
     m_Name: 
     m_Normal:
@@ -712,6 +713,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   current_stage: 1
+  current_mission: 0
+  time_limit: 60
+  max_moves: 20
+  current_moves: 20
 --- !u!1 &963194225
 GameObject:
   m_ObjectHideFlags: 0

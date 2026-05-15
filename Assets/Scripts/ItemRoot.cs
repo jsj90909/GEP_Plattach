@@ -7,6 +7,13 @@ public class ItemRoot : MonoBehaviour
     private static string current_item_name = "";
     private static bool has_item = false;
 
+    ShopRoot shop_root;
+
+    void Start()
+    {
+        this.shop_root = this.gameObject.GetComponent<ShopRoot>();
+    }
+
     public void SetItem(string item_name)
     {
         current_item_name = item_name;
@@ -38,6 +45,8 @@ public class ItemRoot : MonoBehaviour
             Debug.Log("[ItemRoot] 사용할 아이템이 없습니다.");
             return;
         }
+
+        this.shop_root.ApplyItemEffect();
 
         Debug.Log("[ItemRoot] 사용 아이템 사용: " + current_item_name);
 

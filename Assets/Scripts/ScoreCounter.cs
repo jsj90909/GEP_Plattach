@@ -10,9 +10,12 @@ public class ScoreCounter : MonoBehaviour
         public int score; // 점수
         public int total_socre; // 합계 점수
     };
+
     public Count last; // 마지막(이번) 점수
     public Count best; // 최고 점수
+
     public static int QUOTA_SCORE = 10000; // 클리어 하는 데 필요한 점수
+
     public GUIStyle guistyle; // 폰트 스타일
 
     public int[] block_scores; // 블록 점수
@@ -25,12 +28,17 @@ public class ScoreCounter : MonoBehaviour
         this.last.ignite = 0;
         this.last.score = 0;
         this.last.total_socre = 0;
+
         this.guistyle.fontSize = 16;
 
         block_scores = new int[(int)Block.COLOR.NUM];
+
         for (int i = 0; i < block_scores.Length; ++i)
+        {
             block_scores[i] = default_block_score;
+        }
     }
+
     void OnGUI()
     { // 화면에 텍스트와 이미지 표시
         /*
@@ -56,65 +64,91 @@ public class ScoreCounter : MonoBehaviour
         y += 15;
         */
     }
+
     // 연쇄 횟수를 가산
     public void addIgniteCount(int count)
     {
         this.last.ignite += count; // 연쇄 수에 count를 합산
         this.update_score(); // 점수 계산
     }
+
     public void addIgniteCount2(int count, int[] blockcolors)
     {
         this.last.ignite += count; // 연쇄 수에 count를 합산
+
         int[] finalscore = new int[blockcolors.Length];
+
         for (int i = 0; i < blockcolors.Length; ++i)
         {
             finalscore[i] = block_scores[i] * blockcolors[i];
         }
+
         this.update_score2(finalscore); // 점수 계산
     }
+
     // 연쇄 횟수를 리셋
     public void clearIgniteCount()
     {
         this.last.ignite = 0; // 연쇄 횟수 리셋
     }
+
     // 더해야 할 점수를 계산
     private void update_score()
     {
         this.last.score = this.last.ignite * 10; // 점수 갱신
     }
+
     private void update_score2(int[] finalscore)
     {
         int sum = 0;
+
         for (int i = 0; i < finalscore.Length; ++i)
         {
             sum += finalscore[i];
         }
+
         this.last.score = this.last.ignite * sum; // 점수 갱신
     }
+
     // 합계 점수를 갱신
     public void updateTotalScore()
     {
         this.last.total_socre += this.last.score;
     }
-    // 게임을 클리어했는지 판정 (SceneControl에서 사용)
+
+    // 게임을 클리어했는지 판정
     public bool isGameClear()
     {
         bool is_clear = false;
-        // 현재 합계 점수가 클리어 기준보다 크면
-        if (this.last.total_socre > QUOTA_SCORE)
+
+        // 현재 합계 점수가 클리어 기준 이상이면 클리어
+        if (this.last.total_socre >= QUOTA_SCORE)
         {
             is_clear = true;
         }
-        return (is_clear);
+
+        return is_clear;
     }
 
-    // 다음 스테이지 진입 시 목표 점수 갱신 및 스테이지 점수 리셋
+    // 스테이지별 목표 점수 설정 및 현재 점수 리셋
+    public void ResetStageScore(int quota_score)
+    {
+        QUOTA_SCORE = quota_score;
+
+        this.last.ignite = 0;
+        this.last.score = 0;
+        this.last.total_socre = 0;
+
+        Debug.Log("현재 스테이지 목표 점수: " + QUOTA_SCORE);
+    }
+
+    // 기존 방식 유지용: 다음 스테이지 진입 시 목표 점수 증가 및 스테이지 점수 리셋
     public void NextStageSetup(int add_quota)
     {
-        // 목표 점수는 다음 스테이지 난이도에 맞춰 증가 (예: 10000 -> 15000)
+        // 목표 점수는 다음 스테이지 난이도에 맞춰 증가
         QUOTA_SCORE += add_quota;
 
-        // 현재 스테이지 획득 점수 및 연쇄 수 완전히 0으로 초기화!
+        // 현재 스테이지 획득 점수 및 연쇄 수 초기화
         this.last.ignite = 0;
         this.last.score = 0;
         this.last.total_socre = 0;

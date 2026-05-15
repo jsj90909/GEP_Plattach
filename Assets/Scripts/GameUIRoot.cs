@@ -131,7 +131,10 @@ public class GameUIRoot : MonoBehaviour
 
         string joker_name = "없음";
 
-        joker_name = shop_root.GetCurrentJokerName();
+        if (this.shop_root != null)
+        {
+            joker_name = this.shop_root.GetCurrentJokerName();
+        }
 
         GUI.Label(
             this.scaleRect(x + 35.0f, y + 145.0f, w - 70.0f, 80.0f),
@@ -164,26 +167,39 @@ public class GameUIRoot : MonoBehaviour
             ignite_count = this.score_counter.last.ignite;
         }
 
-        int time = 0;
+        float current_time = 0.0f;
 
         if (this.scene_control != null)
         {
-            time = Mathf.CeilToInt(this.scene_control.step_timer);
+            current_time = this.scene_control.step_timer;
+        }
+
+        string limit_text = "시간 : " + Mathf.CeilToInt(current_time).ToString() + "초";
+
+        if (StageManager.Instance != null)
+        {
+            limit_text = StageManager.Instance.GetLimitText(current_time);
         }
 
         GUI.Label(
-            this.scaleRect(x + 45.0f, y + 80.0f, w - 90.0f, 260.0f),
+            this.scaleRect(x + 45.0f, y + 80.0f, w - 90.0f, 280.0f),
             "현재 점수 : " + total_score.ToString() + "\n" +
             "가산 점수 : " + add_score.ToString() + "\n" +
             "연쇄 수 : " + ignite_count.ToString() + "\n" +
-            "시간 : " + time.ToString() + "초",
+            limit_text,
             this.text_style
         );
 
+        string mission_text = "점수 " + ScoreCounter.QUOTA_SCORE.ToString() + "점 도달";
+
+        if (StageManager.Instance != null)
+        {
+            mission_text = StageManager.Instance.GetMissionText();
+        }
+
         GUI.Label(
             this.scaleRect(x + 45.0f, y + 380.0f, w - 90.0f, 220.0f),
-            "현재 미션 :\n" +
-            "점수 " + ScoreCounter.QUOTA_SCORE.ToString() + "점 도달",
+            "현재 미션 :\n" + mission_text,
             this.text_style
         );
     }
@@ -206,7 +222,10 @@ public class GameUIRoot : MonoBehaviour
 
         string debuff_name = "없음";
 
-        debuff_name = this.shop_root.GetCurrentDebuffName();
+        if (this.shop_root != null)
+        {
+            debuff_name = this.shop_root.GetCurrentDebuffName();
+        }
 
         GUI.Label(
             this.scaleRect(x + 35.0f, y + 145.0f, w - 70.0f, 80.0f),
@@ -250,7 +269,7 @@ public class GameUIRoot : MonoBehaviour
             {
                 Debug.Log("[GameUIRoot] 사용 아이템 사용: " + item_name);
 
-                // 아직 실제 효과는 구현 전이므로 아이템 제거만 처리
+                this.item_root.UseCurrentItem();
                 this.item_root.ClearItem();
             }
         }

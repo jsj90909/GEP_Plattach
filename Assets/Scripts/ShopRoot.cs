@@ -6,7 +6,7 @@ using UnityEngine.SceneManagement;
 // 상점 아이템 식별을 위한 Enum 정의
 public enum DebuffType { NONE, HEAT_TIME_DECREASE, SCORE_NULLIFY, REQUIRE_MATCH_4 }
 public enum JokerType { NONE, BLUE_SCORE_UP, MAGENTA_SCORE_UP, REQUIRE_MATCH_2 }
-public enum ItemType { NONE, SHUFFLE, TIME_STOP, BOMB }
+public enum ItemType { NONE, REMOVE_PINK, TIME_STOP, PLUS_MOVES }
 
 public class ShopRoot : MonoBehaviour
 {
@@ -130,7 +130,7 @@ public class ShopRoot : MonoBehaviour
         }
 
         // 3. 아이템 씌우기 (1개)
-        this.applyItemById(this.pending_item_id);
+        //this.applyItemById(this.pending_item_id);
     }
 
     private void createGUIStyle()
@@ -167,9 +167,9 @@ public class ShopRoot : MonoBehaviour
         joker_list.Add(new JokerData(JokerType.MAGENTA_SCORE_UP, "마젠타 블록 점수 증가", "마젠타 블록 점수를 100점으로 변경합니다.", 120));
         joker_list.Add(new JokerData(JokerType.REQUIRE_MATCH_2, "매치 요구 수 감소", "다음 스테이지에서 2개만 연결하면 점수가 납니다.", 150));
 
-        item_list.Add(new ItemData(ItemType.SHUFFLE, "셔플", "나중에 블록을 섞는 아이템으로 구현할 예정입니다."));
+        item_list.Add(new ItemData(ItemType.REMOVE_PINK, "살구색 제거", "그리드의 살구색 블록을 제거합니다."));
         item_list.Add(new ItemData(ItemType.TIME_STOP, "시간 정지", "나중에 일정 시간 타이머를 멈추는 아이템으로 구현할 예정입니다."));
-        item_list.Add(new ItemData(ItemType.BOMB, "폭탄", "나중에 특정 위치 주변 블록을 제거하는 아이템으로 구현할 예정입니다."));
+        item_list.Add(new ItemData(ItemType.PLUS_MOVES, "이동 횟수 증가", "현재 스테이지의 이동 횟수 제한을 증가시킵니다.."));
     }
 
     public void OpenShop()
@@ -540,14 +540,30 @@ public class ShopRoot : MonoBehaviour
 
         switch (item_id)
         {
-            case ItemType.SHUFFLE:
-                // TODO: 셔플 아이템 구현
+            case ItemType.REMOVE_PINK:
+                this.block_root.RemoveBlocksByColor(Block.COLOR.PINK);
                 break;
             case ItemType.TIME_STOP:
                 // TODO: 시간 정지 아이템 구현
                 break;
-            case ItemType.BOMB:
+            case ItemType.PLUS_MOVES:
                 // TODO: 폭탄 아이템 구현
+                break;
+        }
+    }
+
+    public void ApplyItemEffect()
+    {
+        switch (this.pending_item_id)
+        {
+            case ItemType.REMOVE_PINK:
+                this.block_root.RemoveBlocksByColor(Block.COLOR.PINK);
+                break;
+            case ItemType.TIME_STOP:
+                // TODO: 시간 정지 아이템 구현
+                break;
+            case ItemType.PLUS_MOVES:
+                StageManager.Instance.PlusCurrentMoves(50);
                 break;
         }
     }
