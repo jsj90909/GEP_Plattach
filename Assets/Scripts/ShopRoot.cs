@@ -29,8 +29,8 @@ public class ShopRoot : MonoBehaviour
     public int player_gold = 0;
 
     // Enum ID로 상태 저장
-    private DebuffType pending_debuff_id = DebuffType.NONE;
-    private JokerType pending_joker_id = JokerType.NONE;
+    private List<DebuffType> pending_debuff_ids = new List<DebuffType>();
+    private List<JokerType> pending_joker_ids = new List<JokerType>();
     private ItemType pending_item_id = ItemType.NONE;
 
     private DebuffType selected_debuff_id = DebuffType.NONE;
@@ -117,9 +117,20 @@ public class ShopRoot : MonoBehaviour
         if (this.score_counter == null) this.score_counter = this.gameObject.GetComponent<ScoreCounter>();
         if (this.item_root == null) this.item_root = this.gameObject.GetComponent<ItemRoot>();
 
-        this.applyDebuffById(pending_debuff_id);
-        this.applyJokerById(pending_joker_id);
-        this.applyItemById(pending_item_id);
+        // 1. 누적된 디버프 모두 씌우기
+        foreach (DebuffType debuff in this.pending_debuff_ids)
+        {
+            this.applyDebuffById(debuff);
+        }
+
+        // 2. 누적된 조커 모두 씌우기
+        foreach (JokerType joker in this.pending_joker_ids)
+        {
+            this.applyJokerById(joker);
+        }
+
+        // 3. 아이템 씌우기 (1개)
+        this.applyItemById(this.pending_item_id);
     }
 
     private void createGUIStyle()
@@ -180,22 +191,32 @@ public class ShopRoot : MonoBehaviour
     // UI 표시용
     public string GetCurrentDebuffName()
     {
-        if (pending_debuff_id == DebuffType.NONE) return "없음";
-        string display_name = this.debuff_list.Find(d => d.id == pending_debuff_id)?.name;
-        return display_name ?? pending_debuff_id.ToString();
+        if (this.pending_debuff_ids.Count == 0) return "없음";
+
+        List<string> names = new List<string>();
+        foreach (var id in this.pending_debuff_ids)
+        {
+            names.Add(debuff_list.Find(d => d.id == id)?.name ?? id.ToString());
+        }
+        return string.Join("\n", names);
     }
 
     public string GetCurrentJokerName()
     {
-        if (pending_joker_id == JokerType.NONE) return "없음";
-        string display_name = this.joker_list.Find(j => j.id == pending_joker_id)?.name;
-        return display_name ?? pending_joker_id.ToString();
+        if (this.pending_joker_ids.Count == 0) return "없음";
+
+        List<string> names = new List<string>();
+        foreach (var id in this.pending_joker_ids)
+        {
+            names.Add(joker_list.Find(j => j.id == id)?.name ?? id.ToString());
+        }
+        return string.Join("\n", names);
     }
 
     public string GetCurrentItemName()
     {
-        if (pending_item_id == ItemType.NONE) return "없음";
-        return pending_item_id.ToString();
+        if (this.pending_item_id == ItemType.NONE) return "없음";
+        return item_list.Find(i => i.id == this.pending_item_id)?.name ?? this.pending_item_id.ToString();
     }
 
     public int GetGold()
@@ -349,7 +370,6 @@ public class ShopRoot : MonoBehaviour
             this.button_style))
         {
             this.selected_joker_id = JokerType.NONE;
-            pending_joker_id = JokerType.NONE;
 
             this.step = STEP.ITEM_SELECT;
             this.message = "사용 아이템은 무료로 하나 선택합니다.";
@@ -428,10 +448,10 @@ public class ShopRoot : MonoBehaviour
 
     private void selectDebuff(DebuffData data)
     {
-        this.selected_debuff_id = data.id;
-        pending_debuff_id = data.id;
+        this.selected_debuff_id = data.id; // 완료 창 표시용
+        this.pending_debuff_ids.Add(data.id); // 실제 효과 리스트에 누적
 
-        player_gold += data.reward_gold;
+        this.player_gold += data.reward_gold;
 
         this.step = STEP.JOKER_SELECT;
         this.message = data.name + " 선택. +" + data.reward_gold.ToString() + " Gold 획득.";
@@ -439,16 +459,16 @@ public class ShopRoot : MonoBehaviour
 
     private void selectJoker(JokerData data)
     {
-        if (player_gold < data.price)
+        if (this.player_gold < data.price)
         {
             this.message = "골드가 부족합니다.";
             return;
         }
 
-        this.selected_joker_id = data.id;
-        pending_joker_id = data.id;
+        this.selected_joker_id = data.id; // 완료 창 표시용
+        this.pending_joker_ids.Add(data.id); // 실제 효과 리스트에 누적
 
-        player_gold -= data.price;
+        this.player_gold -= data.price;
 
         this.step = STEP.ITEM_SELECT;
         this.message = data.name + " 구매 완료. 사용 아이템을 선택하세요.";

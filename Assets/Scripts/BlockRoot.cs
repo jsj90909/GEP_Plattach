@@ -668,6 +668,9 @@ public class BlockRoot : MonoBehaviour
     // 맵 전체를 스캔하여 매치가 발생한 블록의 색상을 안전하게 교체하는 함수
     private void RemoveInitialMatches()
     {
+        // 현재 레벨의 블록 확률 데이터를 가져옴
+        float[] probabilities = this.level_control.getCurrentLevelData().probability;
+
         for (int y = 0; y < Block.BLOCK_NUM_Y; y++)
         {
             for (int x = 0; x < Block.BLOCK_NUM_X; x++)
@@ -678,26 +681,43 @@ public class BlockRoot : MonoBehaviour
                 if (CheckMatchAt(x, y, block.color))
                 {
                     List<Block.COLOR> safeColors = new List<Block.COLOR>();
+                    float safeProbabilitySum = 0.0f; // 안전한 색상들의 확률 총합
 
-                    // 사용 가능한 모든 색상 중에서 현재 위치에 두어도 안전한 색상만 추려냅니다.
+                    // 현재 스테이지의 블록 확률 데이터를 바탕으로 안전한 색상 후보를 수집
                     for (int c = 0; c < (int)Block.COLOR.NORMAL_COLOR_NUM; c++)
                     {
                         Block.COLOR testColor = (Block.COLOR)c;
-                        if (!CheckMatchAt(x, y, testColor))
+
+                        // 해당 색상을 놓았을 때 매치가 발생하지 않고, 출현 확률이 0보다 큰 경우에만 후보로 등록
+                        if (!CheckMatchAt(x, y, testColor) && probabilities[c] > 0.0f)
                         {
                             safeColors.Add(testColor);
+                            safeProbabilitySum += probabilities[c];
                         }
                     }
 
-                    // 안전한 색상 리스트 중에서 하나를 무작위로 선택하여 적용
+                    // 안전한 색상 리스트 중에서 현재 레벨의 확률(가중치)을 반영하여 선택
                     if (safeColors.Count > 0)
                     {
-                        Block.COLOR safeColor = safeColors[Random.Range(0, safeColors.Count)];
-                        block.setColor(safeColor);
+                        float rand = Random.Range(0.0f, safeProbabilitySum);
+                        float currentSum = 0.0f;
+                        Block.COLOR selectedSafeColor = safeColors[0]; // 기본값 설정
+
+                        foreach (Block.COLOR color in safeColors)
+                        {
+                            currentSum += probabilities[(int)color];
+                            if (rand <= currentSum)
+                            {
+                                selectedSafeColor = color;
+                                break;
+                            }
+                        }
+
+                        block.setColor(selectedSafeColor);
                     }
                     else
                     {
-                        // (예외 처리) 모든 색상이 겹치는 극한의 상황이라면 기본 무작위 색상 적용
+                        // (예외 처리) 모든 색상이 겹치거나 출현 가능한 색상이 없는 극한의 상황이라면 기본 무작위 색상 적용
                         block.setColor(this.selectBlockColor());
                     }
                 }
@@ -758,5 +778,109 @@ public class BlockRoot : MonoBehaviour
             }
             this.blocks = null; // 가비지 컬렉터 유도 및 배열 리셋
         }
+    }
+
+    // 직관적인 타겟 확률(0.0f ~ 1.0f, 예: 15%면 0.15f)을 입력받아 
+    // 정확히 해당 확률이 되도록 기존 로직의 원시값을 역산하는 함수
+    public void SetExactProbability(Block.COLOR color, float targetRatio)
+    {
+        // 확률은 0.0f(0%) ~ 1.0f(100%) 사이의 값만 유효하도록 제한
+        targetRatio = Mathf.Clamp(targetRatio, 0.0f, 1.0f);
+
+        LevelData level_data = this.level_control.getCurrentLevelData();
+
+        // 1. 타겟 색상을 제외한 나머지 색상들의 현재 확률 합계를 구함
+        float sumOthers = 0.0f;
+        for (int i = 0; i < level_data.probability.Length; i++)
+        {
+            if (i != (int)color)
+            {
+                sumOthers += level_data.probability[i];
+            }
+        }
+
+        // 2. 예외 처리: 확률을 1.0(100%)으로 덮어씌우려는 경우
+        if (targetRatio >= 1.0f)
+        {
+            for (int i = 0; i < level_data.probability.Length; i++)
+            {
+                level_data.probability[i] = (i == (int)color) ? 1.0f : 0.0f;
+            }
+            this.SetProbability(color, 1.0f); // 내부에서 normalize()가 돌면서 타겟만 100%가 됨
+            return;
+        }
+
+        // 3. 예외 처리: 나머지 확률 합이 0인데 타겟을 1.0 미만으로 설정하려는 경우
+        // (나머지 색상들이 모두 0%로 소멸된 상태라 계산이 불가능하므로 균등하게 살려줌)
+        if (sumOthers <= 0.0f)
+        {
+            float distribute = 1.0f / (level_data.probability.Length - 1);
+            for (int i = 0; i < level_data.probability.Length; i++)
+            {
+                if (i != (int)color)
+                {
+                    level_data.probability[i] = distribute;
+                    sumOthers += distribute;
+                }
+            }
+        }
+
+        // 4. 수학적 역산 
+        // 공식: 목표 확률 = (입력할 값) / (나머지 합계 + 입력할 값)
+        // 위 공식을 '입력할 값'에 대해 정리하면 아래와 같이 됩니다.
+        float requiredRawProbability = (targetRatio * sumOthers) / (1.0f - targetRatio);
+
+        // 5. 기존 함수 호출 (넘겨준 값이 LevelControl로 들어가 normalize() 되면서 완벽한 목표 %가 됨)
+        this.SetProbability(color, requiredRawProbability);
+    }
+
+    // 1. 모든 블록의 확률을 동일하게 (1/N) 맞추는 함수
+    public void SetEqualProbabilities()
+    {
+        int colorCount = (int)Block.COLOR.NORMAL_COLOR_NUM; // 현재 색상 개수 (6개)
+        float equalProb = 1.0f / colorCount;
+
+        LevelData level_data = this.level_control.getCurrentLevelData();
+
+        for (int i = 0; i < colorCount; i++)
+        {
+            level_data.probability[i] = equalProb;
+        }
+
+        // 합계를 1.0(100%)으로 깔끔하게 맞춤
+        level_data.normalize();
+        Debug.Log("All probabilities set equally: " + string.Join(", ", level_data.probability));
+    }
+
+    // 2. 특정 블록의 확률만 지정하고, 나머지는 남은 확률을 동일하게 나눠 가지는 함수
+    public void SetProbabilityAndDistributeEqually(Block.COLOR targetColor, float targetProbability)
+    {
+        // 입력된 확률이 0.0 ~ 1.0 사이가 되도록 제한
+        targetProbability = Mathf.Clamp(targetProbability, 0.0f, 1.0f);
+
+        int colorCount = (int)Block.COLOR.NORMAL_COLOR_NUM;
+        float remainingProbability = 1.0f - targetProbability; // 남은 확률
+        float distributeProbability = remainingProbability / (colorCount - 1); // 나머지 블록이 나눠 가질 확률
+
+        LevelData level_data = this.level_control.getCurrentLevelData();
+
+        for (int i = 0; i < colorCount; i++)
+        {
+            if (i == (int)targetColor)
+            {
+                // 타겟 블록에는 지정한 확률 부여
+                level_data.probability[i] = targetProbability;
+            }
+            else
+            {
+                // 나머지 블록에는 분배된 확률 부여
+                level_data.probability[i] = distributeProbability;
+            }
+        }
+
+        // 오차 보정 및 적용을 위해 normalize 호출
+        level_data.normalize();
+        Debug.Log($"Target {targetColor} set to {targetProbability}. Others set to {distributeProbability}.");
+        Debug.Log("Current Probabilities: " + string.Join(", ", level_data.probability));
     }
 }

@@ -29,7 +29,10 @@ public class JokerRoot : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Return))
         {
             this.score_counter.block_scores[(int)Block.COLOR.BLUE] = 10000; // 블록 점수 변경 조커
-            this.block_root.SetProbability(Block.COLOR.MAGENTA, 15); // 블록 색상 확률 변경 조커
+            //this.block_root.SetProbability(Block.COLOR.MAGENTA, 15); // 블록 색상 확률 변경 조커
+            //this.block_root.SetExactProbability(Block.COLOR.MAGENTA, 0.15f);
+            this.block_root.SetEqualProbabilities(); // 모든 블록 색상 확률을 동일하게 조커
+            //this.block_root.SetProbabilityAndDistributeEqually(Block.COLOR.MAGENTA, 0.5f); // 특정 블록 색상 확률을 변경하고 나머지 블록 색상 확률을 동일하게 조커
 
             Debug.Log("Block Scores: " + FormatBlockScores());
         }
