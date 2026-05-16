@@ -315,21 +315,14 @@ public class GameUIRoot : MonoBehaviour
         this.drawPanel(rect);
 
         GUI.Label(
-            this.scaleRect(x, y + h / 2.0f - 40.0f, w, 60.0f),
-            "보스능력",
+            this.scaleRect(x, y + h / 2.0f - 130.0f, w, 60.0f),
+            "보스 능력",
             this.title_style
         );
 
-        string boss_text = "없음";
-
-        if (StageManager.Instance != null && StageManager.Instance.current_stage == 3)
-        {
-            boss_text = "노란색 블록\n점수 0점\n출현 확률 증가";
-        }
-
         GUI.Label(
-            this.scaleRect(x + 50.0f, y + h / 2.0f + 40.0f, w - 100.0f, 120.0f),
-            boss_text,
+            this.scaleRect(x + 50.0f, y + h / 2.0f - 30.0f, w - 100.0f, 80.0f),
+            "노란색 블록의\n점수를 무효화하고\n출현 확률을 증가 시킵니다.",
             this.text_style
         );
     }
