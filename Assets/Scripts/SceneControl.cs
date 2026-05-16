@@ -217,4 +217,9 @@ public class SceneControl : MonoBehaviour
         this.step = STEP.PLAY; // 상태를 다시 플레이 중으로 강제 변경
         this.next_step = STEP.NONE;
     }
+
+    public void PlusTime(float time)
+    {
+        this.step_timer += time;
+    }
 }

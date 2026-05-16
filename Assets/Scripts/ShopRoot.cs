@@ -2,11 +2,12 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using static UnityEditor.PlayerSettings;
 
 // 상점 아이템 식별을 위한 Enum 정의
-public enum DebuffType { NONE, HEAT_TIME_DECREASE, SCORE_NULLIFY, REQUIRE_MATCH_4 }
-public enum JokerType { NONE, BLUE_SCORE_UP, MAGENTA_SCORE_UP, REQUIRE_MATCH_2 }
-public enum ItemType { NONE, REMOVE_PINK, TIME_STOP, PLUS_MOVES }
+public enum DebuffType { NONE, HEAT_TIME_DECREASE, SCORE_NULLIFY, REQUIRE_MATCH_4, MOVE_LOCK }
+public enum JokerType { NONE, BLUE_SCORE_UP, MAGENTA_SCORE_UP, REQUIRE_MATCH_2, ALL_SCORE_UP }
+public enum ItemType { NONE, REMOVE_PINK, SCORE_MULTIPLIER, PLUS_MOVES }
 
 public class ShopRoot : MonoBehaviour
 {
@@ -25,6 +26,8 @@ public class ShopRoot : MonoBehaviour
     private ScoreCounter score_counter = null;
     private BlockRoot block_root = null;
     private ItemRoot item_root = null;
+    private SceneControl scene_control = null;
+    private DebuffRoot debuff_root = null;
 
     public int player_gold = 0;
 
@@ -101,11 +104,16 @@ public class ShopRoot : MonoBehaviour
     private List<JokerData> joker_list = new List<JokerData>();
     private List<ItemData> item_list = new List<ItemData>();
 
+    private List<DebuffData> current_displayed_debuffs = new List<DebuffData>();
+    private List<JokerData> current_displayed_jokers = new List<JokerData>();
+
     void Start()
     {
         this.score_counter = this.gameObject.GetComponent<ScoreCounter>();
         this.block_root = this.gameObject.GetComponent<BlockRoot>();
         this.item_root = this.gameObject.GetComponent<ItemRoot>();
+        this.scene_control = this.gameObject.GetComponent<SceneControl>();
+        this.debuff_root = this.gameObject.GetComponent<DebuffRoot>();
 
         this.createShopData();
     }
@@ -162,13 +170,15 @@ public class ShopRoot : MonoBehaviour
         debuff_list.Add(new DebuffData(DebuffType.HEAT_TIME_DECREASE, "불타는 시간 감소", "다음 스테이지에서 블록이 더 빨리 사라집니다.", 100));
         debuff_list.Add(new DebuffData(DebuffType.SCORE_NULLIFY, "특정 구역 점수 무효화", "다음 스테이지에서 일부 구역의 블록 점수가 무효화됩니다.", 150));
         debuff_list.Add(new DebuffData(DebuffType.REQUIRE_MATCH_4, "4개 매치 필요", "다음 스테이지에서 4개 이상 연결해야 점수가 납니다.", 200));
+        debuff_list.Add(new DebuffData(DebuffType.MOVE_LOCK, "이동 불가 구역 생성", "다음 스테이지에서 이동 불가 구역이 생성됩니다.", 250));
 
-        joker_list.Add(new JokerData(JokerType.BLUE_SCORE_UP, "파란색 블록 점수 증가", "파란색 블록 점수를 100점으로 변경합니다.", 100));
-        joker_list.Add(new JokerData(JokerType.MAGENTA_SCORE_UP, "마젠타 블록 점수 증가", "마젠타 블록 점수를 100점으로 변경합니다.", 120));
+        joker_list.Add(new JokerData(JokerType.BLUE_SCORE_UP, "파란색 블록 점수 증가", "파란색 블록 점수를 1000점으로 변경합니다.", 100));
+        joker_list.Add(new JokerData(JokerType.MAGENTA_SCORE_UP, "마젠타 블록 점수 증가", "마젠타 블록 점수를 1000점으로 변경합니다.", 120));
         joker_list.Add(new JokerData(JokerType.REQUIRE_MATCH_2, "매치 요구 수 감소", "다음 스테이지에서 2개만 연결하면 점수가 납니다.", 150));
+        joker_list.Add(new JokerData(JokerType.ALL_SCORE_UP, "전체 블록 점수 증가", "모든 색깔 블록의 점수를 500점으로 변경합니다.", 200));
 
         item_list.Add(new ItemData(ItemType.REMOVE_PINK, "살구색 제거", "그리드의 살구색 블록을 제거합니다."));
-        item_list.Add(new ItemData(ItemType.TIME_STOP, "시간 정지", "나중에 일정 시간 타이머를 멈추는 아이템으로 구현할 예정입니다."));
+        item_list.Add(new ItemData(ItemType.SCORE_MULTIPLIER, "점수 2배", "사용 시 일정 시간 동안 모든 블록의 획득 점수가 2배가 됩니다."));
         item_list.Add(new ItemData(ItemType.PLUS_MOVES, "이동 횟수 증가", "현재 스테이지의 이동 횟수 제한을 증가시킵니다.."));
     }
 
@@ -179,6 +189,8 @@ public class ShopRoot : MonoBehaviour
         this.selected_debuff_id = DebuffType.NONE;
         this.selected_joker_id = JokerType.NONE;
         this.selected_item_id = ItemType.NONE;
+
+        this.GenerateRandomOptions();
 
         this.message = "디버프를 선택하면 골드를 받습니다.";
     }
@@ -299,9 +311,10 @@ public class ShopRoot : MonoBehaviour
             this.text_style
         );
 
-        for (int i = 0; i < debuff_list.Count; i++)
+        // debuff_list 대신 current_displayed_debuffs 사용
+        for (int i = 0; i < current_displayed_debuffs.Count; i++)
         {
-            DebuffData data = debuff_list[i];
+            DebuffData data = current_displayed_debuffs[i];
             Rect box_rect = this.getCardRect(i);
 
             GUI.Box(box_rect, "");
@@ -336,9 +349,10 @@ public class ShopRoot : MonoBehaviour
             this.text_style
         );
 
-        for (int i = 0; i < joker_list.Count; i++)
+        // joker_list 대신 current_displayed_jokers 사용
+        for (int i = 0; i < current_displayed_jokers.Count; i++)
         {
-            JokerData data = joker_list[i];
+            JokerData data = current_displayed_jokers[i];
             Rect box_rect = this.getCardRect(i);
 
             GUI.Box(box_rect, "");
@@ -501,7 +515,14 @@ public class ShopRoot : MonoBehaviour
         switch (debuff_id)
         {
             case DebuffType.SCORE_NULLIFY:
-                HashSet<Vector2Int> positions = new HashSet<Vector2Int> { new Vector2Int(0, 0), new Vector2Int(1, 0), new Vector2Int(2, 0) };
+                HashSet<Vector2Int> positions = new HashSet<Vector2Int> {};
+                for (int i = 0; i < Block.BLOCK_NUM_X/2; ++i)
+                {
+                    for (int j = 0; j < Block.BLOCK_NUM_Y/2; ++j)
+                    {
+                        positions.Add(new Vector2Int(i, j));
+                    }
+                }
                 this.block_root.SetNegativeBlockPositions(positions);
                 break;
             case DebuffType.REQUIRE_MATCH_4:
@@ -510,20 +531,30 @@ public class ShopRoot : MonoBehaviour
             case DebuffType.HEAT_TIME_DECREASE:
                 this.block_root.SetHeatTime(1.5f);
                 break;
+            case DebuffType.MOVE_LOCK:
+                HashSet<Vector2Int> moveLockPositions = new HashSet<Vector2Int>();
+                for (int i = 0; i < Block.BLOCK_NUM_X; ++i)
+                {
+                    Vector2Int pos = new Vector2Int(i, 4);
+                    moveLockPositions.Add(pos);
+                }
+                this.debuff_root.CreateMoveLock(moveLockPositions);
+                this.block_root.SetMoveLockPositions(moveLockPositions);
+                break;
         }
     }
 
     private void applyJokerById(JokerType joker_id)
     {
-        if (this.score_counter == null || this.score_counter.block_scores == null) return;
+        if (this.score_counter == null) return;
 
         switch (joker_id)
         {
             case JokerType.BLUE_SCORE_UP:
-                this.score_counter.block_scores[(int)Block.COLOR.BLUE] = 100;
+                this.score_counter.joker_score_overrides[(int)Block.COLOR.BLUE] = 1000;
                 break;
             case JokerType.MAGENTA_SCORE_UP:
-                this.score_counter.block_scores[(int)Block.COLOR.MAGENTA] = 100;
+                this.score_counter.joker_score_overrides[(int)Block.COLOR.MAGENTA] = 1000;
                 break;
             case JokerType.REQUIRE_MATCH_2:
                 if (this.block_root != null)
@@ -531,23 +562,11 @@ public class ShopRoot : MonoBehaviour
                     this.block_root.SetRequireBlocks(2);
                 }
                 break;
-        }
-    }
-
-    private void applyItemById(ItemType item_id)
-    {
-        if (item_id == ItemType.NONE) return;
-
-        switch (item_id)
-        {
-            case ItemType.REMOVE_PINK:
-                this.block_root.RemoveBlocksByColor(Block.COLOR.PINK);
-                break;
-            case ItemType.TIME_STOP:
-                // TODO: 시간 정지 아이템 구현
-                break;
-            case ItemType.PLUS_MOVES:
-                // TODO: 폭탄 아이템 구현
+            case JokerType.ALL_SCORE_UP:
+                for (int i = 0; i < (int)Block.COLOR.NUM; i++)
+                {
+                    this.score_counter.joker_score_overrides[i] = 500;
+                }
                 break;
         }
     }
@@ -559,12 +578,60 @@ public class ShopRoot : MonoBehaviour
             case ItemType.REMOVE_PINK:
                 this.block_root.RemoveBlocksByColor(Block.COLOR.PINK);
                 break;
-            case ItemType.TIME_STOP:
-                // TODO: 시간 정지 아이템 구현
+            case ItemType.SCORE_MULTIPLIER:
+                if (this.score_counter != null)
+                {
+                    // 2배수 적용, 5초 동안 지속
+                    this.score_counter.ActivateScoreMultiplier(2, 5.0f);
+                }
                 break;
             case ItemType.PLUS_MOVES:
                 StageManager.Instance.PlusCurrentMoves(50);
                 break;
         }
+    }
+
+    // 리스트를 무작위로 섞어주는 헬퍼 함수
+    private void ShuffleList<T>(List<T> list)
+    {
+        for (int i = 0; i < list.Count; i++)
+        {
+            T temp = list[i];
+            int randomIndex = Random.Range(i, list.Count);
+            list[i] = list[randomIndex];
+            list[randomIndex] = temp;
+        }
+    }
+
+    // 이미 선택된 항목을 제외하고 랜덤으로 3개를 추출하는 함수
+    private void GenerateRandomOptions()
+    {
+        // 1. 디버프 랜덤 추출
+        List<DebuffData> available_debuffs = new List<DebuffData>();
+        foreach (var d in debuff_list)
+        {
+            // 이미 선택된(pending) 디버프가 아니라면 후보에 추가
+            if (!pending_debuff_ids.Contains(d.id))
+            {
+                available_debuffs.Add(d);
+            }
+        }
+        ShuffleList(available_debuffs); // 후보를 무작위로 섞음
+        // 최대 3개까지만 자르기
+        current_displayed_debuffs = available_debuffs.GetRange(0, Mathf.Min(3, available_debuffs.Count));
+
+        // 2. 조커 랜덤 추출
+        List<JokerData> available_jokers = new List<JokerData>();
+        foreach (var j in joker_list)
+        {
+            // 이미 선택된(pending) 조커가 아니라면 후보에 추가
+            if (!pending_joker_ids.Contains(j.id))
+            {
+                available_jokers.Add(j);
+            }
+        }
+        ShuffleList(available_jokers); // 후보를 무작위로 섞음
+        // 최대 3개까지만 자르기
+        current_displayed_jokers = available_jokers.GetRange(0, Mathf.Min(3, available_jokers.Count));
     }
 }

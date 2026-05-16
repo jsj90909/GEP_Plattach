@@ -433,8 +433,9 @@ MonoBehaviour:
     m_FixedHeight: 0
     m_StretchWidth: 1
     m_StretchHeight: 0
-  block_scores: 
-  default_block_score: 10
+  default_block_score: 100
+  boss_nullified_colors: 
+  joker_score_overrides: 
 --- !u!114 &860052428
 MonoBehaviour:
   m_ObjectHideFlags: 0

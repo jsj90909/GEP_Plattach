@@ -39,16 +39,16 @@ public class DebuffRoot : MonoBehaviour
             //}
             //this.block_root.SetNegativeBlockPositions(positions);
 
-            HashSet<Vector2Int> moveLockPositions = new HashSet<Vector2Int>();
-            for (int i = 0; i < Block.BLOCK_NUM_X; ++i)
-            {
-                    Vector2Int pos = new Vector2Int(i, 4);
-                    moveLockPositions.Add(pos);
-                    CreateMoveLock(pos);
-            }
-            this.block_root.SetMoveLockPositions(moveLockPositions);
+            //HashSet<Vector2Int> moveLockPositions = new HashSet<Vector2Int>();
+            //for (int i = 0; i < Block.BLOCK_NUM_X; ++i)
+            //{
+            //        Vector2Int pos = new Vector2Int(i, 4);
+            //        moveLockPositions.Add(pos);
+            //        CreateMoveLock(pos);
+            //}
+            //this.block_root.SetMoveLockPositions(moveLockPositions);
 
-            this.block_root.SetHeatTime(0.5f);
+            //this.block_root.SetHeatTime(0.5f);
         }
     }
 

@@ -4,14 +4,15 @@ using UnityEngine;
 
 public class ItemRoot : MonoBehaviour
 {
-    private static string current_item_name = "";
-    private static bool has_item = false;
+    private string current_item_name = "";
+    private bool has_item = false;
 
     ShopRoot shop_root;
 
     void Start()
     {
         this.shop_root = this.gameObject.GetComponent<ShopRoot>();
+        if(has_item) ClearItem();
     }
 
     public void SetItem(string item_name)
@@ -50,7 +51,6 @@ public class ItemRoot : MonoBehaviour
 
         Debug.Log("[ItemRoot] 사용 아이템 사용: " + current_item_name);
 
-        // 아직 실제 효과는 구현하지 않았으므로 로그만 출력
         current_item_name = "";
         has_item = false;
     }

@@ -18,8 +18,16 @@ public class ScoreCounter : MonoBehaviour
 
     public GUIStyle guistyle; // 폰트 스타일
 
-    public int[] block_scores; // 블록 점수
-    public int default_block_score = 10; // 블록 기본 점수
+    //public int[] block_scores; // 블록 점수
+    public int default_block_score = 100; // 블록 기본 점수
+
+    public bool[] boss_nullified_colors; // 보스 기믹 등으로 인한 0점 처리 여부
+    public int[] joker_score_overrides;  // 조커로 인한 점수 고정 값 (0이면 적용 안 됨)
+
+    private int current_multiplier = 1;
+    private float multiplier_timer = 0.0f;
+    public float MultiplierTimer => multiplier_timer;
+    public int CurrentMultiplier => current_multiplier;
 
     void Start()
     {
@@ -31,27 +39,34 @@ public class ScoreCounter : MonoBehaviour
 
         this.guistyle.fontSize = 16;
 
-        block_scores = new int[(int)Block.COLOR.NUM];
+        //block_scores = new int[(int)Block.COLOR.NUM];
 
-        for (int i = 0; i < block_scores.Length; ++i)
-        {
-            block_scores[i] = default_block_score;
-        }
+        //for (int i = 0; i < block_scores.Length; ++i)
+        //{
+        //    block_scores[i] = default_block_score;
+        //}
+
+        boss_nullified_colors = new bool[(int)Block.COLOR.NUM];
+        joker_score_overrides = new int[(int)Block.COLOR.NUM];
+
+        current_multiplier = 1;
+        multiplier_timer = 0.0f;
     }
 
-    void OnGUI()
-    { // 화면에 텍스트와 이미지 표시
-        /*
-        int x = 20;
-        int y = 50;
-        GUI.color = Color.black;
-        this.print_value(x + 20, y, "연쇄 카운트", this.last.ignite);
-        y += 30;
-        this.print_value(x + 20, y, "가산 스코어", this.last.score);
-        y += 30;
-        this.print_value(x + 20, y, "합계 스코어", this.last.total_socre);
-        y += 30;
-        */
+    void Update()
+    {
+        if (this.multiplier_timer > 0.0f)
+        {
+            this.multiplier_timer -= Time.deltaTime;
+
+            // 시간이 만료되면 배수 초기화
+            if (this.multiplier_timer <= 0.0f)
+            {
+                this.current_multiplier = 1;
+                this.multiplier_timer = 0.0f;
+                Debug.Log("[ScoreCounter] 점수 배수 버프 효과가 종료되었습니다.");
+            }
+        }
     }
 
     // 지정된 두 개의 데이터를 두 개의 행에 나눠 표시.
@@ -80,7 +95,8 @@ public class ScoreCounter : MonoBehaviour
 
         for (int i = 0; i < blockcolors.Length; ++i)
         {
-            finalscore[i] = block_scores[i] * blockcolors[i];
+            //finalscore[i] = block_scores[i] * blockcolors[i];
+            finalscore[i] = GetBlockScore(i) * blockcolors[i];
         }
 
         this.update_score2(finalscore); // 점수 계산
@@ -95,7 +111,7 @@ public class ScoreCounter : MonoBehaviour
     // 더해야 할 점수를 계산
     private void update_score()
     {
-        this.last.score = this.last.ignite * 10; // 점수 갱신
+        this.last.score = this.last.ignite * default_block_score; // 점수 갱신
     }
 
     private void update_score2(int[] finalscore)
@@ -154,5 +170,46 @@ public class ScoreCounter : MonoBehaviour
         this.last.total_socre = 0;
 
         Debug.Log("다음 스테이지 목표 점수: " + QUOTA_SCORE);
+    }
+
+    // 다음 스테이지로 넘어갈 때 버프/디버프 초기화용 메서드
+    public void ResetStageModifiers()
+    {
+        for (int i = 0; i < (int)Block.COLOR.NUM; ++i)
+        {
+            boss_nullified_colors[i] = false;
+            joker_score_overrides[i] = 0;
+        }
+
+        this.current_multiplier = 1;
+        this.multiplier_timer = 0.0f;
+    }
+
+    // 우선순위에 따른 블록 점수 계산
+    public int GetBlockScore(int color_index)
+    {
+        // 1순위: 보스 및 디버프로 인한 무효화 (무조건 0점, 0에 무엇을 곱해도 0)
+        if (boss_nullified_colors[color_index])
+        {
+            return 0;
+        }
+
+        int calculated_score = default_block_score;
+
+        // 2순위: 조커로 인한 점수 고정 변경 적용
+        if (joker_score_overrides[color_index] > 0)
+        {
+            calculated_score = joker_score_overrides[color_index];
+        }
+
+        // 3순위: 아이템 버프로 인한 최종 점수 배수 적용
+        return calculated_score * current_multiplier;
+    }
+
+    public void ActivateScoreMultiplier(int multiplier, float duration)
+    {
+        this.current_multiplier = multiplier;
+        this.multiplier_timer = duration;
+        Debug.Log($"[ScoreCounter] 점수 {multiplier}배 버프 활성화! 지속시간: {duration}초");
     }
 }

@@ -1026,10 +1026,10 @@ public class BlockRoot : MonoBehaviour
         Debug.Log("Current Probabilities: " + string.Join(", ", level_data.probability));
     }
 
-    public void SetBlockScore(Block.COLOR color, int score)
-    {
-        this.score_counter.block_scores[(int)color] = score;
-    }
+    //public void SetBlockScore(Block.COLOR color, int score)
+    //{
+    //    this.score_counter.block_scores[(int)color] = score;
+    //}
 
     public void RemoveBlocksByColor(Block.COLOR color)
     {

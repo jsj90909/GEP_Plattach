@@ -58,6 +58,8 @@ public class GameUIRoot : MonoBehaviour
         this.drawRightTopDebuffPanel();
         this.drawRightItemPanel();
         this.drawRightBossPanel();
+
+        this.drawMultiplierTimer();
     }
 
     private void createGUIStyle()
@@ -143,6 +145,23 @@ public class GameUIRoot : MonoBehaviour
         );
     }
 
+    private string getStageText()
+    {
+        int stage = 1;
+
+        if (StageManager.Instance != null)
+        {
+            stage = StageManager.Instance.current_stage;
+        }
+
+        if (stage == 3)
+        {
+            return "현재 스테이지 : \n보스 스테이지";
+        }
+
+        return "현재 스테이지 : \n" + stage.ToString() + " 스테이지";
+    }
+
     private void drawLeftInfoPanel()
     {
         float x = this.getLeftX();
@@ -198,7 +217,8 @@ public class GameUIRoot : MonoBehaviour
         }
 
         GUI.Label(
-            this.scaleRect(x + 45.0f, y + 380.0f, w - 90.0f, 220.0f),
+            this.scaleRect(x + 45.0f, y + 365.0f, w - 90.0f, 270.0f),
+            this.getStageText() + "\n\n" +
             "현재 미션 :\n" + mission_text,
             this.text_style
         );
@@ -297,15 +317,47 @@ public class GameUIRoot : MonoBehaviour
         this.drawPanel(rect);
 
         GUI.Label(
-            this.scaleRect(x, y + h / 2.0f - 40.0f, w, 60.0f),
-            "보스능력",
+            this.scaleRect(x, y + h / 2.0f - 130.0f, w, 60.0f),
+            "보스 능력",
             this.title_style
         );
 
         GUI.Label(
-            this.scaleRect(x + 50.0f, y + h / 2.0f + 40.0f, w - 100.0f, 80.0f),
-            "아직 없음",
+            this.scaleRect(x + 50.0f, y + h / 2.0f - 30.0f, w - 100.0f, 80.0f),
+            "노란색 블록의\n점수를 무효화하고\n출현 확률을 증가 시킵니다.",
             this.text_style
         );
+    }
+
+    // 점수 배수 아이템의 남은 시간을 화면 상단 중앙에 표시하는 함수
+    private void drawMultiplierTimer()
+    {
+        if (this.score_counter == null) return;
+
+        // 남은 시간이 0보다 클 때만 화면에 렌더링 (효과 끝나면 자동으로 안 보임)
+        if (this.score_counter.MultiplierTimer > 0.0f)
+        {
+            // 1920 x 1080 기준 해상도의 상단 중앙 배치 계산
+            float box_width = 460.0f;
+            float box_height = 65.0f;
+            float x = (BASE_WIDTH / 2.0f) - (box_width / 2.0f);
+            float y = 40.0f; // 상단 레이블들과 겹치지 않는 적당한 높이
+
+            Rect rect = this.scaleRect(x, y, box_width, box_height);
+
+            // 반투명한 검은색 배경 박스 그리기
+            this.drawPanel(rect);
+
+            // 타이머 강조를 위한 황금색(노란색) 폰트 스타일 세팅
+            GUIStyle timer_style = new GUIStyle(this.title_style);
+            timer_style.normal.textColor = Color.yellow;
+            timer_style.fontSize = 30; // 가시성을 위해 적당히 큰 크기 지정
+
+            // 소수점 첫째 자리까지 남은 시간 포맷팅
+            string timer_text = $"점수 {this.score_counter.CurrentMultiplier}배 버프 중! : {this.score_counter.MultiplierTimer:F1}초";
+
+            // 텍스트 출력
+            GUI.Label(rect, timer_text, timer_style);
+        }
     }
 }

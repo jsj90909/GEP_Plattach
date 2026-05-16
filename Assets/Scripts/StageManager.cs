@@ -29,6 +29,10 @@ public class StageManager : MonoBehaviour
     public int max_moves = 20;
     public int current_moves = 20;
 
+    // 보스 스테이지 설정
+    private static readonly Block.COLOR boss_zero_score_color = Block.COLOR.YELLOW;
+    private const float boss_target_probability = 0.45f;
+
     void Awake()
     {
         if (Instance == null)
@@ -76,16 +80,19 @@ public class StageManager : MonoBehaviour
         // 1. 상점 UI 닫기
         shop_root.step = ShopRoot.STEP.CLOSED;
 
-        // 2. 기존 보드 블록 파괴 및 디버프 초기화
+        // 2. 기존 보드 블록 파괴 및 디버프 오브젝트 초기화
         block_root.ClearBoard();
         debuff_root.ClearDebuffs();
         block_root.ClearNegativeBlockPositions();
         block_root.ClearMoveLockPositions();
 
-        // 3, 4. 현재 스테이지에 맞는 미션 / 목표 점수 / 레벨 설정
+        // [핵심 추가 범위] 다음 스테이지 연산을 하기 전에 점수 모디파이어(보스 플래그, 조커 효과)를 완전 초기화
+        score_counter.ResetStageModifiers();
+
+        // 3, 4. 현재 스테이지에 맞는 미션 / 목표 점수 / 레벨 설정 (여기서 보스 스테이지라면 ApplyBossStageRule 호출됨)
         SetupStage(current_stage);
 
-        // 5. 상점에서 구매한 다음 스테이지 적용 효과 처리
+        // 5. 상점에서 새로 구매한 다음 스테이지 적용 효과 처리 (여기서 조커 오버라이드가 새로 씌워짐)
         shop_root.ApplyPendingEffects();
 
         // 6. 새로운 보드 생성 (블록 재배치)
@@ -134,7 +141,7 @@ public class StageManager : MonoBehaviour
                 break;
 
             case 3:
-                // 3스테이지: 더 어려운 이동 횟수 제한 미션
+                // 3스테이지: 보스 스테이지
                 current_mission = MISSION_TYPE.MOVE_LIMIT;
 
                 max_moves = 15;
@@ -146,6 +153,10 @@ public class StageManager : MonoBehaviour
                 {
                     block_root.level_control.selectLevel(2);
                 }
+
+                // 보스 스테이지 효과 적용
+                ApplyBossStageRule();
+
                 break;
 
             default:
@@ -154,6 +165,32 @@ public class StageManager : MonoBehaviour
         }
 
         Debug.Log("[StageManager] Stage " + stage + " 설정 완료 / Mission: " + current_mission);
+    }
+
+    // 보스 스테이지 전용 규칙
+    private void ApplyBossStageRule()
+    {
+        EnsureComponents();
+
+        if (block_root == null || score_counter == null)
+        {
+            Debug.LogWarning("[StageManager] 보스 스테이지 적용 실패: 컴포넌트가 없습니다.");
+            return;
+        }
+
+        // 1. 보스 전용 점수 무효화 플래그만 활성화 (ScoreCounter가 이 플래그를 보고 최우선 순위로 0점 처리함)
+        score_counter.boss_nullified_colors[(int)boss_zero_score_color] = true;
+
+        // 2. 특정 블록 확률 증가 및 나머지 균등 분배 (기존 규칙 유지)
+        if (block_root.level_control != null)
+        {
+            block_root.SetProbabilityAndDistributeEqually(
+                boss_zero_score_color,
+                boss_target_probability
+            );
+        }
+
+        Debug.Log($"[StageManager] 보스 스테이지 규칙 적용 완료 / 무효화 색상: {boss_zero_score_color} / 출현 확률: {boss_target_probability}");
     }
 
     // 블록을 실제로 한 번 이동했을 때 호출
@@ -242,6 +279,7 @@ public class StageManager : MonoBehaviour
         {
             return;
         }
+
         current_moves += amount;
         Debug.Log("이동 횟수 증가: " + amount + " / 현재 이동 횟수: " + current_moves);
     }
