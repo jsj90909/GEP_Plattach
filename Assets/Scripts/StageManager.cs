@@ -29,6 +29,10 @@ public class StageManager : MonoBehaviour
     public int max_moves = 20;
     public int current_moves = 20;
 
+    // 보스 스테이지 설정
+    private static readonly Block.COLOR boss_zero_score_color = Block.COLOR.YELLOW;
+    private const float boss_target_probability = 0.45f;
+
     void Awake()
     {
         if (Instance == null)
@@ -134,7 +138,7 @@ public class StageManager : MonoBehaviour
                 break;
 
             case 3:
-                // 3스테이지: 더 어려운 이동 횟수 제한 미션
+                // 3스테이지: 보스 스테이지
                 current_mission = MISSION_TYPE.MOVE_LIMIT;
 
                 max_moves = 15;
@@ -146,6 +150,10 @@ public class StageManager : MonoBehaviour
                 {
                     block_root.level_control.selectLevel(2);
                 }
+
+                // 보스 스테이지 효과 적용
+                ApplyBossStageRule();
+
                 break;
 
             default:
@@ -154,6 +162,46 @@ public class StageManager : MonoBehaviour
         }
 
         Debug.Log("[StageManager] Stage " + stage + " 설정 완료 / Mission: " + current_mission);
+    }
+
+    // 보스 스테이지 전용 규칙
+    private void ApplyBossStageRule()
+    {
+        EnsureComponents();
+
+        if (block_root == null || score_counter == null)
+        {
+            Debug.LogWarning("[StageManager] 보스 스테이지 적용 실패: 컴포넌트가 없습니다.");
+            return;
+        }
+
+        // ScoreCounter의 block_scores가 아직 준비되지 않았을 가능성 대비
+        if (score_counter.block_scores == null || score_counter.block_scores.Length != (int)Block.COLOR.NUM)
+        {
+            score_counter.block_scores = new int[(int)Block.COLOR.NUM];
+
+            for (int i = 0; i < score_counter.block_scores.Length; i++)
+            {
+                score_counter.block_scores[i] = score_counter.default_block_score;
+            }
+        }
+
+        // 1. 특정 블록 점수를 0점으로 변경
+        block_root.SetBlockScore(boss_zero_score_color, 0);
+
+        // 2. 특정 블록 확률 증가 + 나머지 블록 확률 균등 분배
+        if (block_root.level_control != null)
+        {
+            block_root.SetProbabilityAndDistributeEqually(
+                boss_zero_score_color,
+                boss_target_probability
+            );
+        }
+
+        Debug.Log(
+            "[StageManager] 보스 스테이지 적용 완료 / " +
+            boss_zero_score_color + " 점수 0 / 확률 " + boss_target_probability
+        );
     }
 
     // 블록을 실제로 한 번 이동했을 때 호출
@@ -242,6 +290,7 @@ public class StageManager : MonoBehaviour
         {
             return;
         }
+
         current_moves += amount;
         Debug.Log("이동 횟수 증가: " + amount + " / 현재 이동 횟수: " + current_moves);
     }

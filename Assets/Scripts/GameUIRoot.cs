@@ -297,14 +297,14 @@ public class GameUIRoot : MonoBehaviour
         this.drawPanel(rect);
 
         GUI.Label(
-            this.scaleRect(x, y + h / 2.0f - 40.0f, w, 60.0f),
+            this.scaleRect(x, y + h / 2.0f - 130.0f, w, 60.0f),
             "보스능력",
             this.title_style
         );
 
         GUI.Label(
-            this.scaleRect(x + 50.0f, y + h / 2.0f + 40.0f, w - 100.0f, 80.0f),
-            "아직 없음",
+            this.scaleRect(x + 50.0f, y + h / 2.0f - 30.0f, w - 100.0f, 80.0f),
+            "노란색 블록의\n점수가 무효화 되고,\n출현 확률 증가합니다.",
             this.text_style
         );
     }
