@@ -143,6 +143,23 @@ public class GameUIRoot : MonoBehaviour
         );
     }
 
+    private string getStageText()
+    {
+        int stage = 1;
+
+        if (StageManager.Instance != null)
+        {
+            stage = StageManager.Instance.current_stage;
+        }
+
+        if (stage == 3)
+        {
+            return "현재 스테이지 : \n보스 스테이지";
+        }
+
+        return "현재 스테이지 : \n" + stage.ToString() + " 스테이지";
+    }
+
     private void drawLeftInfoPanel()
     {
         float x = this.getLeftX();
@@ -198,7 +215,8 @@ public class GameUIRoot : MonoBehaviour
         }
 
         GUI.Label(
-            this.scaleRect(x + 45.0f, y + 380.0f, w - 90.0f, 220.0f),
+            this.scaleRect(x + 45.0f, y + 365.0f, w - 90.0f, 270.0f),
+            this.getStageText() + "\n\n" +
             "현재 미션 :\n" + mission_text,
             this.text_style
         );
@@ -297,14 +315,21 @@ public class GameUIRoot : MonoBehaviour
         this.drawPanel(rect);
 
         GUI.Label(
-            this.scaleRect(x, y + h / 2.0f - 130.0f, w, 60.0f),
+            this.scaleRect(x, y + h / 2.0f - 40.0f, w, 60.0f),
             "보스능력",
             this.title_style
         );
 
+        string boss_text = "없음";
+
+        if (StageManager.Instance != null && StageManager.Instance.current_stage == 3)
+        {
+            boss_text = "노란색 블록\n점수 0점\n출현 확률 증가";
+        }
+
         GUI.Label(
-            this.scaleRect(x + 50.0f, y + h / 2.0f - 30.0f, w - 100.0f, 80.0f),
-            "노란색 블록의\n점수가 무효화 되고,\n출현 확률 증가합니다.",
+            this.scaleRect(x + 50.0f, y + h / 2.0f + 40.0f, w - 100.0f, 120.0f),
+            boss_text,
             this.text_style
         );
     }
