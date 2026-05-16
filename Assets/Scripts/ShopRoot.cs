@@ -433,13 +433,13 @@ public class ShopRoot : MonoBehaviour
         GUI.Box(box_rect, "");
 
         GUI.Label(
-            new Rect(box_rect.x + 40, box_rect.y + 35, 920, 350),
-            "상점 선택 완료\n\n" +
-            "선택한 디버프 : " + selected_debuff_id.ToString() + "\n" +
-            "구매한 조커 : " + selected_joker_id.ToString() + "\n" +
-            "선택한 사용 아이템 : " + selected_item_id.ToString() + "\n\n" +
-            "현재 골드 : " + player_gold.ToString(),
-            this.text_style
+        new Rect(box_rect.x + 40, box_rect.y + 35, 920, 350),
+        $"상점 선택 완료\n\n" +
+        $"선택한 디버프 : {debuff_list.Find(d => d.id == this.selected_debuff_id)?.name ?? this.selected_debuff_id.ToString()}\n" +
+        $"구매한 조커 : {joker_list.Find(j => j.id == this.selected_joker_id)?.name ?? this.selected_joker_id.ToString()}\n" +
+        $"선택한 사용 아이템 : {item_list.Find(i => i.id == this.selected_item_id)?.name ?? this.selected_item_id.ToString()}\n\n" +
+        $"현재 골드 : {player_gold}",
+        this.text_style
         );
 
         if (GUI.Button(
