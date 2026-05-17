@@ -8,10 +8,12 @@ public class GameResult : MonoBehaviour
     private GUIStyle box_style;
 
     private bool gui_style_initialized = false;
+    private float timer = 0.0f;
 
     void Update()
     {
-        if (Input.GetMouseButtonDown(0))
+        this.timer += Time.deltaTime;
+        if (Input.GetMouseButtonDown(0) && this.timer > 1.0f)
         {
             SceneManager.LoadScene("TitleScene");
         }
