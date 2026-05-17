@@ -67,36 +67,10 @@ public class SceneControl : MonoBehaviour
         this.step_timer += Time.deltaTime;
 
         if (this.next_step == STEP.NONE)
-        { // 상태 변화 대기
+        {
+            // 상태 변화 대기
             switch (this.step)
             {
-                case STEP.CLEAR:
-                    // 마지막 스테이지 클리어 후에는 클릭하면 타이틀로 이동
-                    if (StageManager.Instance != null && StageManager.Instance.IsFinalStage())
-                    {
-                        if (Input.GetMouseButtonDown(0))
-                        {
-                            SceneManager.LoadScene("TitleScene");
-                        }
-                    }
-                    // ShopRoot가 없을 때만 기존처럼 타이틀로 돌아가게 함
-                    else if (this.shop_root == null)
-                    {
-                        if (Input.GetMouseButtonDown(0))
-                        {
-                            SceneManager.LoadScene("TitleScene");
-                        }
-                    }
-                    break;
-
-                case STEP.GAMEOVER:
-                    // 게임오버 상태에서 클릭하면 타이틀로 이동
-                    if (Input.GetMouseButtonDown(0))
-                    {
-                        SceneManager.LoadScene("TitleScene");
-                    }
-                    break;
-
                 case STEP.PLAY:
                     // 1. 클리어 조건을 먼저 검사
                     // 마지막 이동으로 목표 점수에 도달했을 경우 GAMEOVER보다 CLEAR가 우선
@@ -118,7 +92,8 @@ public class SceneControl : MonoBehaviour
         }
 
         while (this.next_step != STEP.NONE)
-        { // 상태가 변화했다면
+        {
+            // 상태가 변화했다면
             this.step = this.next_step;
             this.next_step = STEP.NONE;
 
@@ -131,12 +106,22 @@ public class SceneControl : MonoBehaviour
                     this.block_root.enabled = false; // block_root를 정지
                     this.clear_time = this.step_timer; // 경과 시간을 클리어 시간으로 설정
 
-                    // 마지막 스테이지가 아니면 클리어 후 상점 열기
-                    if (this.shop_root != null)
+                    // 마지막 스테이지 클리어라면 게임 클리어 씬으로 이동
+                    if (StageManager.Instance != null && StageManager.Instance.IsFinalStage())
                     {
-                        if (StageManager.Instance == null || !StageManager.Instance.IsFinalStage())
+                        SceneManager.LoadScene("GameClearScene");
+                    }
+                    else
+                    {
+                        // 마지막 스테이지가 아니면 기존처럼 상점 열기
+                        if (this.shop_root != null)
                         {
                             this.shop_root.OpenShop();
+                        }
+                        else
+                        {
+                            // 예외 상황: 상점이 없으면 결과 씬으로 이동해서 멈추는 상황 방지
+                            SceneManager.LoadScene("GameClearScene");
                         }
                     }
 
@@ -145,64 +130,15 @@ public class SceneControl : MonoBehaviour
 
                 case STEP.GAMEOVER:
                     this.block_root.enabled = false; // 게임 진행 정지
+
+                    // 게임오버 씬으로 이동
+                    SceneManager.LoadScene("GameOverScene");
+
                     Debug.Log("게임 오버");
                     break;
             }
 
             this.step_timer = 0.0f;
-        }
-    }
-
-    // 화면에 클리어 / 게임오버 메시지를 표시
-    void OnGUI()
-    {
-        if (this.guistyle == null)
-        {
-            this.guistyle = new GUIStyle();
-            this.guistyle.fontSize = 24;
-        }
-
-        switch (this.step)
-        {
-            case STEP.CLEAR:
-                // 마지막 스테이지 클리어 때만 최종 클리어 메시지 표시
-                if (StageManager.Instance != null && StageManager.Instance.IsFinalStage())
-                {
-                    GUI.color = Color.black;
-
-                    GUI.Label(
-                        new Rect(Screen.width / 2.0f - 160.0f, 40.0f, 320.0f, 40.0f),
-                        "게임 클리어!",
-                        guistyle
-                    );
-
-                    GUI.Label(
-                        new Rect(Screen.width / 2.0f - 180.0f, 80.0f, 360.0f, 40.0f),
-                        "화면을 클릭하면 타이틀로 돌아갑니다.",
-                        guistyle
-                    );
-
-                    GUI.color = Color.white;
-                }
-                break;
-
-            case STEP.GAMEOVER:
-                GUI.color = Color.black;
-
-                GUI.Label(
-                    new Rect(Screen.width / 2.0f - 120.0f, 40.0f, 240.0f, 40.0f),
-                    "게임 오버",
-                    guistyle
-                );
-
-                GUI.Label(
-                    new Rect(Screen.width / 2.0f - 180.0f, 80.0f, 360.0f, 40.0f),
-                    "화면을 클릭하면 타이틀로 돌아갑니다.",
-                    guistyle
-                );
-
-                GUI.color = Color.white;
-                break;
         }
     }
 
