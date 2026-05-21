@@ -2,7 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using static UnityEditor.PlayerSettings;
 
 // 상점 아이템 식별을 위한 Enum 정의
 public enum DebuffType { NONE, HEAT_TIME_DECREASE, SCORE_NULLIFY, REQUIRE_MATCH_4, MOVE_LOCK }
@@ -45,6 +44,7 @@ public class ShopRoot : MonoBehaviour
     public GUIStyle title_style;
     public GUIStyle text_style;
     public GUIStyle button_style;
+    public GUIStyle gold_style;
 
     private bool gui_style_initialized = false;
 
@@ -154,13 +154,17 @@ public class ShopRoot : MonoBehaviour
         this.title_style.alignment = TextAnchor.MiddleCenter;
 
         this.text_style = new GUIStyle();
-        this.text_style.fontSize = 26;
+        this.text_style.fontSize = 28;
         this.text_style.normal.textColor = Color.white;
         this.text_style.wordWrap = true;
 
         this.button_style = new GUIStyle(GUI.skin.button);
         this.button_style.fontSize = 24;
         this.button_style.alignment = TextAnchor.MiddleCenter;
+
+        this.gold_style = new GUIStyle();
+        this.gold_style.fontSize = 40;
+        this.gold_style.normal.textColor = Color.yellow;
 
         this.gui_style_initialized = true;
     }
@@ -179,7 +183,7 @@ public class ShopRoot : MonoBehaviour
 
         item_list.Add(new ItemData(ItemType.REMOVE_PINK, "살구색 제거", "그리드의 살구색 블록을 제거합니다."));
         item_list.Add(new ItemData(ItemType.SCORE_MULTIPLIER, "점수 2배", "사용 시 일정 시간 동안 모든 블록의 획득 점수가 2배가 됩니다."));
-        item_list.Add(new ItemData(ItemType.PLUS_MOVES, "이동 횟수 증가", "현재 스테이지의 이동 횟수 제한을 증가시킵니다.."));
+        item_list.Add(new ItemData(ItemType.PLUS_MOVES, "이동 횟수 증가", "현재 스테이지의 이동 횟수 제한을 증가시킵니다."));
     }
 
     public void OpenShop()
@@ -282,7 +286,7 @@ public class ShopRoot : MonoBehaviour
         GUI.Label(
             new Rect(40, 35, 400, 45),
             "Gold : " + player_gold.ToString(),
-            this.text_style
+            this.gold_style
         );
 
         if (this.message != "")
