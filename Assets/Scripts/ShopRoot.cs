@@ -590,7 +590,7 @@ public class ShopRoot : MonoBehaviour
                 }
                 break;
             case ItemType.PLUS_MOVES:
-                StageManager.Instance.PlusCurrentMoves(50);
+                StageManager.Instance.PlusCurrentMoves(10);
                 break;
         }
     }
