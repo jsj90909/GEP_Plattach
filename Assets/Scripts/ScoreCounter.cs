@@ -14,7 +14,7 @@ public class ScoreCounter : MonoBehaviour
     public Count last; // 마지막(이번) 점수
     public Count best; // 최고 점수
 
-    public static int QUOTA_SCORE = 10000; // 클리어 하는 데 필요한 점수
+    public int QUOTA_SCORE = 10000; // 클리어 하는 데 필요한 점수
 
     public GUIStyle guistyle; // 폰트 스타일
 
@@ -31,7 +31,7 @@ public class ScoreCounter : MonoBehaviour
 
     void Start()
     {
-        QUOTA_SCORE = 10000;
+        //QUOTA_SCORE = 10000;
 
         this.last.ignite = 0;
         this.last.score = 0;
@@ -211,5 +211,10 @@ public class ScoreCounter : MonoBehaviour
         this.current_multiplier = multiplier;
         this.multiplier_timer = duration;
         Debug.Log($"[ScoreCounter] 점수 {multiplier}배 버프 활성화! 지속시간: {duration}초");
+    }
+
+    public string GetQuotaScoreText()
+    {
+        return $"{QUOTA_SCORE}";
     }
 }

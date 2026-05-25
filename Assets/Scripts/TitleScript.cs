@@ -25,9 +25,9 @@ public class TitleScript : MonoBehaviour
         this.createGUIStyle();
 
         // 배경 반투명 박스
-        GUI.color = new Color(0.0f, 0.0f, 0.0f, 0.65f);
+        GUI.color = new Color(0.0f, 0.0f, 0.0f, 1f);
         GUI.Box(
-            new Rect(Screen.width / 2.0f - 520.0f, 90.0f, 1040.0f, 760.0f),
+            new Rect(0, 0, Screen.width, Screen.height),//new Rect(Screen.width / 2.0f - 520.0f, 90.0f, 1040.0f, 760.0f),
             "",
             this.box_style
         );

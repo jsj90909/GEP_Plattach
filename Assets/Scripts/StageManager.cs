@@ -117,7 +117,7 @@ public class StageManager : MonoBehaviour
                 max_moves = 0;
                 current_moves = 0;
 
-                score_counter.ResetStageScore(10000);
+                score_counter.ResetStageScore(100000);
 
                 if (block_root.level_control != null)
                 {
@@ -132,7 +132,7 @@ public class StageManager : MonoBehaviour
                 max_moves = 20;
                 current_moves = max_moves;
 
-                score_counter.ResetStageScore(30000);
+                score_counter.ResetStageScore(200000);
 
                 if (block_root.level_control != null)
                 {
@@ -147,7 +147,7 @@ public class StageManager : MonoBehaviour
                 max_moves = 15;
                 current_moves = max_moves;
 
-                score_counter.ResetStageScore(50000);
+                score_counter.ResetStageScore(300000);
 
                 if (block_root.level_control != null)
                 {
@@ -244,10 +244,10 @@ public class StageManager : MonoBehaviour
         switch (current_mission)
         {
             case MISSION_TYPE.TIME_LIMIT:
-                return "제한 시간 안에\n점수 " + ScoreCounter.QUOTA_SCORE.ToString() + "점 도달";
+                return "제한 시간 안에\n점수 " + score_counter.GetQuotaScoreText() + "점 도달";
 
             case MISSION_TYPE.MOVE_LIMIT:
-                return "이동 횟수 " + max_moves.ToString() + "번 안에\n점수 " + ScoreCounter.QUOTA_SCORE.ToString() + "점 도달";
+                return "이동 횟수 " + max_moves.ToString() + "번 안에\n점수 " + score_counter.GetQuotaScoreText() + "점 도달";
         }
 
         return "";

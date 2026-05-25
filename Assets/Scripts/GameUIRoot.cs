@@ -209,7 +209,7 @@ public class GameUIRoot : MonoBehaviour
             this.text_style
         );
 
-        string mission_text = "점수 " + ScoreCounter.QUOTA_SCORE.ToString() + "점 도달";
+        string mission_text = "점수 " + score_counter.GetQuotaScoreText() + "점 도달";
 
         if (StageManager.Instance != null)
         {
