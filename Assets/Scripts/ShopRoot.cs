@@ -171,17 +171,17 @@ public class ShopRoot : MonoBehaviour
 
     private void createShopData()
     {
-        debuff_list.Add(new DebuffData(DebuffType.HEAT_TIME_DECREASE, "불타는 시간 감소", "다음 스테이지에서 블록이 더 빨리 사라집니다.", 200));
-        debuff_list.Add(new DebuffData(DebuffType.SCORE_NULLIFY, "특정 구역 점수 무효화", "다음 스테이지에서 일부 구역의 블록 점수가 무효화됩니다.", 150));
-        debuff_list.Add(new DebuffData(DebuffType.REQUIRE_MATCH_4, "4개 매치 필요", "다음 스테이지에서 4개 이상 연결해야 점수가 납니다.", 250));
-        debuff_list.Add(new DebuffData(DebuffType.MOVE_LOCK, "이동 불가 구역 생성", "다음 스테이지에서 이동 불가 구역이 생성됩니다.", 100));
-        debuff_list.Add(new DebuffData(DebuffType.MAGENTA_PROBABILITY_UP, "마젠타 블록 확률 증가", "다음 스테이지에서 마젠타 블록 등장 확률이 증가합니다.", 300));
+        debuff_list.Add(new DebuffData(DebuffType.HEAT_TIME_DECREASE, "불타는 시간 감소", "다음 스테이지부터 블록이 더 빨리 사라집니다.", 250));
+        debuff_list.Add(new DebuffData(DebuffType.SCORE_NULLIFY, "특정 구역 점수 무효화", "다음 스테이지부터 일부 구역의 블록 점수가 무효화됩니다.", 150));
+        debuff_list.Add(new DebuffData(DebuffType.REQUIRE_MATCH_4, "4개 매치 필요", "다음 스테이지부터 4개 이상 연결해야 점수가 납니다.", 250));
+        debuff_list.Add(new DebuffData(DebuffType.MOVE_LOCK, "이동 불가 구역 생성", "다음 스테이지부터 이동 불가 구역이 생성됩니다.", 150));
+        debuff_list.Add(new DebuffData(DebuffType.MAGENTA_PROBABILITY_UP, "마젠타 블록 확률 생성", "다음 스테이지부터 마젠타 블록 등장 확률이 생성됩니다.", 300));
 
         joker_list.Add(new JokerData(JokerType.BLUE_SCORE_UP, "파란색 블록 점수 증가", "파란색 블록 점수를 1000점으로 변경합니다.", 100));
         joker_list.Add(new JokerData(JokerType.BLUE_PROBABILITY_UP, "파란색 블록 확률 증가", "파란색 블록 등장 확률을 증가시킵니다.", 150));
-        joker_list.Add(new JokerData(JokerType.REQUIRE_MATCH_2, "매치 요구 수 감소", "다음 스테이지에서 2개만 연결하면 점수가 납니다.", 300));
+        joker_list.Add(new JokerData(JokerType.REQUIRE_MATCH_2, "매치 요구 수 감소", "다음 스테이지부터 2개만 연결하면 점수가 납니다.", 300));
         joker_list.Add(new JokerData(JokerType.ALL_SCORE_UP, "전체 블록 점수 증가", "모든 색깔 블록의 점수를 500점으로 변경합니다.", 200));
-        joker_list.Add(new JokerData(JokerType.GREEN_PROBABILITY_ZERO, "초록색 블록 제거", "다음 스테이지에서 초록색 블록이 등장하지 않습니다.", 300));
+        joker_list.Add(new JokerData(JokerType.GREEN_PROBABILITY_ZERO, "초록색 블록 제거", "다음 스테이지부터 초록색 블록이 등장하지 않습니다.", 250));
 
         item_list.Add(new ItemData(ItemType.REMOVE_PINK, "살구색 제거", "그리드의 살구색 블록을 제거합니다."));
         item_list.Add(new ItemData(ItemType.SCORE_MULTIPLIER, "점수 2배", "사용 시 일정 시간 동안 모든 블록의 획득 점수가 2배가 됩니다."));
@@ -535,7 +535,7 @@ public class ShopRoot : MonoBehaviour
                 this.block_root.SetRequireBlocks(4);
                 break;
             case DebuffType.HEAT_TIME_DECREASE:
-                this.block_root.SetHeatTime(1.5f);
+                this.block_root.SetHeatTime(2.0f);
                 break;
             case DebuffType.MOVE_LOCK:
                 HashSet<Vector2Int> moveLockPositions = new HashSet<Vector2Int>();

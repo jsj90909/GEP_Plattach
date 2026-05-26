@@ -8,7 +8,7 @@ public class LevelData
     public float heat_time; // 연소시간
     public LevelData()
     { // 생성자
-        this.probability = new float[(int)Block.COLOR.NORMAL_COLOR_NUM]; // 블록의 종류 수와 같은 크기로 데이어 영역을 확보
+        this.probability = new float[(int)Block.COLOR.NORMAL_COLOR_NUM]; // 블록의 종류 수와 같은 크기로 레이어 영역을 확보
         for (int i = 0; i < (int)Block.COLOR.NORMAL_COLOR_NUM; i++)
         { // 모든 종류의 출현확률을 우선 균등하게
             this.probability[i] = 1.0f / (float)Block.COLOR.NORMAL_COLOR_NUM;

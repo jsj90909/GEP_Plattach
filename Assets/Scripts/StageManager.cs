@@ -129,10 +129,10 @@ public class StageManager : MonoBehaviour
                 // 2스테이지: 이동 횟수 제한 미션
                 current_mission = MISSION_TYPE.MOVE_LIMIT;
 
-                max_moves = 20;
+                max_moves = 30;
                 current_moves = max_moves;
 
-                score_counter.ResetStageScore(200000);
+                score_counter.ResetStageScore(150000);
 
                 if (block_root.level_control != null)
                 {
@@ -144,10 +144,10 @@ public class StageManager : MonoBehaviour
                 // 3스테이지: 보스 스테이지
                 current_mission = MISSION_TYPE.MOVE_LIMIT;
 
-                max_moves = 15;
+                max_moves = 20;
                 current_moves = max_moves;
 
-                score_counter.ResetStageScore(300000);
+                score_counter.ResetStageScore(200000);
 
                 if (block_root.level_control != null)
                 {
