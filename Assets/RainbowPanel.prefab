@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &4836584063135597432
+--- !u!1 &4359176474632328398
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,48 +8,46 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 1830950794897696675}
-  - component: {fileID: 2868256451372844809}
-  - component: {fileID: 7186056313083369039}
-  - component: {fileID: 7066375058678180009}
-  - component: {fileID: 376601885856755821}
+  - component: {fileID: 7731198117874277963}
+  - component: {fileID: 5411769872372990159}
+  - component: {fileID: 1071269574432509782}
   m_Layer: 0
-  m_Name: Block
+  m_Name: Cube
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &1830950794897696675
+--- !u!4 &7731198117874277963
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4836584063135597432}
+  m_GameObject: {fileID: 4359176474632328398}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.95, y: 0.95, z: 0.06}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 3667991475422560529}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &2868256451372844809
+--- !u!33 &5411769872372990159
 MeshFilter:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4836584063135597432}
+  m_GameObject: {fileID: 4359176474632328398}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
---- !u!23 &7186056313083369039
+--- !u!23 &1071269574432509782
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4836584063135597432}
+  m_GameObject: {fileID: 4359176474632328398}
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
@@ -85,48 +83,35 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!65 &7066375058678180009
-BoxCollider:
+--- !u!1 &6307601567497326175
+GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4836584063135597432}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 1, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &376601885856755821
-MonoBehaviour:
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3667991475422560529}
+  m_Layer: 0
+  m_Name: RainbowPanel
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!4 &3667991475422560529
+Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4836584063135597432}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 89f9596a11383be46b8d3d809dd3ee35, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  color: 0
-  block_root: {fileID: 0}
-  is_rainbow: 0
-  rainbow_panel: {fileID: 6307601567497326175, guid: 28761409e68a4904a9081fd824755661, type: 3}
-  step: -1
-  next_step: -1
-  position_offset: {x: 0, y: 0, z: 0}
-  vanish_timer: -1
-  slide_dir: -1
-  step_timer: 0
-  opague_material: {fileID: 0}
-  transparent_material: {fileID: 0}
+  m_GameObject: {fileID: 6307601567497326175}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 7731198117874277963}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}

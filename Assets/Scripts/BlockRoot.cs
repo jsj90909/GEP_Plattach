@@ -41,6 +41,11 @@ public class BlockRoot : MonoBehaviour
         this.unprojectMousePosition(out mouse_position, Input.mousePosition); // 마우스 위치를 가져옴
         Vector2 mouse_position_xy = new Vector2(mouse_position.x, mouse_position.y); // 가져온 마우스 위치를 하나의 Vector2로 모음
 
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            this.SpawnRainbowBlock();
+        }
+
         if (this.grabbed_block == null)
         { // 잡은 블록이 비었으면
             if (!this.is_has_falling_block())
@@ -412,6 +417,9 @@ public class BlockRoot : MonoBehaviour
         Block.COLOR color0 = block0.color;
         Block.COLOR color1 = block1.color;
 
+        bool rainbow0 = block0.is_rainbow;
+        bool rainbow1 = block1.is_rainbow;
+
         Vector3 scale0 = block0.transform.localScale;
         Vector3 scale1 = block1.transform.localScale;
 
@@ -424,6 +432,9 @@ public class BlockRoot : MonoBehaviour
         block0.setColor(color1);
         block1.setColor(color0);
 
+        block0.SetRainbow(rainbow1);
+        block1.SetRainbow(rainbow0);
+
         block0.transform.localScale = scale1;
         block1.transform.localScale = scale0;
 
@@ -434,9 +445,33 @@ public class BlockRoot : MonoBehaviour
         block1.beginSlide(offset1);
     }
 
+    // 두 블록이 같은 색으로 연결 가능한지 확인한다.
+    // 무지개 블록은 어떤 색과도 연결되는 와일드카드로 취급한다.
+    private bool IsSameColorOrRainbow(BlockControl a, BlockControl b)
+    {
+        if (a == null || b == null)
+        {
+            return false;
+        }
+
+        if (a.is_rainbow || b.is_rainbow)
+        {
+            return true;
+        }
+
+        return a.color == b.color;
+    }
+
     // 인수로 받은 블록이 세 개의 블록 안에 들어가는 지 파악하는 메서드
     public bool checkConnection(BlockControl start)
     {
+        // 무지개 블록은 다른 색을 이어주는 역할만 한다.
+        // 무지개 블록 자체를 기준색으로 검사하면 서로 다른 색까지 한 줄로 이어질 수 있으므로 제외한다.
+        if (start.is_rainbow)
+        {
+            return false;
+        }
+
         bool ret = false;
         int normal_block_num = 0;
 
@@ -452,7 +487,7 @@ public class BlockRoot : MonoBehaviour
         {
             BlockControl next_block = this.blocks[x, start.i_pos.y];
 
-            if (next_block.color != start.color) { break; }
+            if (!IsSameColorOrRainbow(next_block, start)) { break; }
             if (next_block.step == Block.STEP.FALL || next_block.next_step == Block.STEP.FALL) { break; }
             if (next_block.step == Block.STEP.SLIDE || next_block.next_step == Block.STEP.SLIDE) { break; }
 
@@ -468,7 +503,7 @@ public class BlockRoot : MonoBehaviour
         {
             BlockControl next_block = this.blocks[x, start.i_pos.y];
 
-            if (next_block.color != start.color) { break; }
+            if (!IsSameColorOrRainbow(next_block, start)) { break; }
             if (next_block.step == Block.STEP.FALL || next_block.next_step == Block.STEP.FALL) { break; }
             if (next_block.step == Block.STEP.SLIDE || next_block.next_step == Block.STEP.SLIDE) { break; }
 
@@ -506,7 +541,7 @@ public class BlockRoot : MonoBehaviour
         {
             BlockControl next_block = this.blocks[start.i_pos.x, y];
 
-            if (next_block.color != start.color) { break; }
+            if (!IsSameColorOrRainbow(next_block, start)) { break; }
             if (next_block.step == Block.STEP.FALL || next_block.next_step == Block.STEP.FALL) { break; }
             if (next_block.step == Block.STEP.SLIDE || next_block.next_step == Block.STEP.SLIDE) { break; }
 
@@ -522,7 +557,7 @@ public class BlockRoot : MonoBehaviour
         {
             BlockControl next_block = this.blocks[start.i_pos.x, y];
 
-            if (next_block.color != start.color) { break; }
+            if (!IsSameColorOrRainbow(next_block, start)) { break; }
             if (next_block.step == Block.STEP.FALL || next_block.next_step == Block.STEP.FALL) { break; }
             if (next_block.step == Block.STEP.SLIDE || next_block.next_step == Block.STEP.SLIDE) { break; }
 
@@ -620,6 +655,9 @@ public class BlockRoot : MonoBehaviour
         Block.COLOR color0 = block0.color;
         Block.COLOR color1 = block1.color;
 
+        bool rainbow0 = block0.is_rainbow;
+        bool rainbow1 = block1.is_rainbow;
+
         Vector3 scale0 = block0.transform.localScale;
         Vector3 scale1 = block1.transform.localScale;
 
@@ -634,6 +672,9 @@ public class BlockRoot : MonoBehaviour
 
         block0.setColor(color1);
         block1.setColor(color0);
+
+        block0.SetRainbow(rainbow1);
+        block1.SetRainbow(rainbow0);
 
         block0.transform.localScale = scale1;
         block1.transform.localScale = scale0;
@@ -737,6 +778,39 @@ public class BlockRoot : MonoBehaviour
     public void SetRequireBlocks(int num)
     {
         this.require_blocks = num;
+    }
+
+    // 조커 효과: 현재 보드 위의 일반 블록 하나를 무지개 블록으로 만든다.
+    public void SpawnRainbowBlock()
+    {
+        if (this.blocks == null)
+        {
+            return;
+        }
+
+        List<BlockControl> candidates = new List<BlockControl>();
+
+        foreach (BlockControl block in this.blocks)
+        {
+            if (block == null) continue;
+            if (!block.isIdle()) continue;
+            if (block.isVacant()) continue;
+            if (block.isVanishing()) continue;
+            if (block.is_rainbow) continue;
+
+            candidates.Add(block);
+        }
+
+        if (candidates.Count == 0)
+        {
+            Debug.LogWarning("[BlockRoot] 무지개 블록으로 만들 수 있는 블록이 없습니다.");
+            return;
+        }
+
+        BlockControl target = candidates[Random.Range(0, candidates.Count)];
+        target.SetRainbow(true);
+
+        Debug.Log("[BlockRoot] 무지개 블록 생성: (" + target.i_pos.x + ", " + target.i_pos.y + ")");
     }
 
     public void SetNegativeBlockPositions(HashSet<Vector2Int> positions)
@@ -1002,6 +1076,7 @@ public class BlockRoot : MonoBehaviour
     {
         LevelData level_data = this.level_control.getCurrentLevelData();
         int nonZeroCount = 0;
+
         for (int i = 0; i < level_data.probability.Length; i++)
         {
             if (level_data.probability[i] > 0.0f)
@@ -1009,12 +1084,15 @@ public class BlockRoot : MonoBehaviour
                 nonZeroCount++;
             }
         }
+
         if (nonZeroCount == 0)
         {
             Debug.LogWarning("No non-zero probabilities to distribute.");
             return;
         }
+
         float equalProb = 1.0f / nonZeroCount;
+
         for (int i = 0; i < level_data.probability.Length; i++)
         {
             if (level_data.probability[i] > 0.0f)
@@ -1022,7 +1100,9 @@ public class BlockRoot : MonoBehaviour
                 level_data.probability[i] = equalProb;
             }
         }
+
         level_data.normalize();
+
         Debug.Log("Non-zero probabilities set equally: " + string.Join(", ", level_data.probability));
     }
 
@@ -1130,6 +1210,7 @@ public class BlockRoot : MonoBehaviour
     private int CountVanishingBlocksByColor(Block.COLOR color)
     {
         int count = 0;
+
         foreach (BlockControl block in this.blocks)
         {
             if (block.color == color && block.isVanishing())
@@ -1137,6 +1218,7 @@ public class BlockRoot : MonoBehaviour
                 count++;
             }
         }
+
         return count;
     }
 
@@ -1219,24 +1301,32 @@ public class BlockRoot : MonoBehaviour
     public void DecreaseBlockProbability(Block.COLOR targetColor, float decreaseAmount)
     {
         LevelData level_data = this.level_control.getCurrentLevelData();
+
         // 지정된 블록의 현재 확률을 가져옵니다.
         float currentProbability = level_data.probability[(int)targetColor];
+
         // 현재 확률에서 요청받은 감소치를 빼고, 0.0 ~ 1.0 사이로 제한합니다.
         float targetProbability = Mathf.Clamp(currentProbability - decreaseAmount, 0.0f, 1.0f);
+
         // 0을 보존하는 확률 설정 함수를 호출하여 안전하게 확률을 재분배합니다.
         this.SetProbabilityKeepZeros(targetColor, targetProbability);
+
         Debug.Log("Decreased " + targetColor.ToString() + " by " + decreaseAmount.ToString() + ". Target probability: " + targetProbability.ToString());
     }
 
     public void MultiplyBlockProbability(Block.COLOR targetColor, float multiplier)
     {
         LevelData level_data = this.level_control.getCurrentLevelData();
+
         // 지정된 블록의 현재 확률을 가져옵니다.
         float currentProbability = level_data.probability[(int)targetColor];
+
         // 현재 확률에 요청받은 배율을 곱하고, 0.0 ~ 1.0 사이로 제한합니다.
         float targetProbability = Mathf.Clamp(currentProbability * multiplier, 0.0f, 1.0f);
+
         // 0을 보존하는 확률 설정 함수를 호출하여 안전하게 확률을 재분배합니다.
         this.SetProbabilityKeepZeros(targetColor, targetProbability);
+
         Debug.Log("Multiplied " + targetColor.ToString() + " by " + multiplier.ToString() + ". Target probability: " + targetProbability.ToString());
     }
 }
