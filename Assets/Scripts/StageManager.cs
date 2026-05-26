@@ -31,7 +31,7 @@ public class StageManager : MonoBehaviour
 
     // 보스 스테이지 설정
     private static readonly Block.COLOR boss_zero_score_color = Block.COLOR.YELLOW;
-    private const float boss_target_probability = 0.45f;
+    private const float boss_target_probability = 0.40f;
 
     void Awake()
     {
@@ -184,10 +184,12 @@ public class StageManager : MonoBehaviour
         // 2. 특정 블록 확률 증가 및 나머지 균등 분배 (기존 규칙 유지)
         if (block_root.level_control != null)
         {
-            block_root.SetProbabilityAndDistributeEqually(
-                boss_zero_score_color,
-                boss_target_probability
-            );
+            //block_root.SetProbabilityAndDistributeEqually(
+            //    boss_zero_score_color,
+            //    boss_target_probability
+            //);
+
+            block_root.SetProbabilityKeepZeros(boss_zero_score_color, boss_target_probability);
         }
 
         Debug.Log($"[StageManager] 보스 스테이지 규칙 적용 완료 / 무효화 색상: {boss_zero_score_color} / 출현 확률: {boss_target_probability}");

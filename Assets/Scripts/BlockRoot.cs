@@ -998,6 +998,34 @@ public class BlockRoot : MonoBehaviour
         Debug.Log("All probabilities set equally: " + string.Join(", ", level_data.probability));
     }
 
+    public void SetEqualProbabilitiesKeepZeros()
+    {
+        LevelData level_data = this.level_control.getCurrentLevelData();
+        int nonZeroCount = 0;
+        for (int i = 0; i < level_data.probability.Length; i++)
+        {
+            if (level_data.probability[i] > 0.0f)
+            {
+                nonZeroCount++;
+            }
+        }
+        if (nonZeroCount == 0)
+        {
+            Debug.LogWarning("No non-zero probabilities to distribute.");
+            return;
+        }
+        float equalProb = 1.0f / nonZeroCount;
+        for (int i = 0; i < level_data.probability.Length; i++)
+        {
+            if (level_data.probability[i] > 0.0f)
+            {
+                level_data.probability[i] = equalProb;
+            }
+        }
+        level_data.normalize();
+        Debug.Log("Non-zero probabilities set equally: " + string.Join(", ", level_data.probability));
+    }
+
     public void SetProbabilityAndDistributeEqually(Block.COLOR targetColor, float targetProbability)
     {
         targetProbability = Mathf.Clamp(targetProbability, 0.0f, 1.0f);
@@ -1110,5 +1138,105 @@ public class BlockRoot : MonoBehaviour
             }
         }
         return count;
+    }
+
+    public void SetProbabilityKeepZeros(Block.COLOR targetColor, float targetProbability)
+    {
+        // 목표 확률을 0.0 ~ 1.0 사이로 제한
+        targetProbability = Mathf.Clamp(targetProbability, 0.0f, 1.0f);
+        LevelData level_data = this.level_control.getCurrentLevelData();
+
+        int nonZeroCount = 0;
+        float sumOthers = 0.0f;
+
+        // 1. 타겟 색상이 아니며, 현재 확률이 0이 아닌 블록들의 개수와 합을 파악
+        for (int i = 0; i < level_data.probability.Length; i++)
+        {
+            if (i != (int)targetColor && level_data.probability[i] > 0.0f)
+            {
+                nonZeroCount++;
+                sumOthers += level_data.probability[i];
+            }
+        }
+
+        // 2. 다른 출현 가능한 블록이 없거나, 타겟 확률을 1.0(100%)으로 설정한 경우
+        if (targetProbability >= 1.0f || nonZeroCount == 0)
+        {
+            for (int i = 0; i < level_data.probability.Length; i++)
+            {
+                level_data.probability[i] = (i == (int)targetColor) ? 1.0f : 0.0f;
+            }
+
+            level_data.normalize();
+            return;
+        }
+
+        // 3. 기존에 출현하던 블록들(0이 아닌 블록)에게만 남은 확률을 기존 비율대로 분배
+        float remainingProbability = 1.0f - targetProbability;
+
+        for (int i = 0; i < level_data.probability.Length; i++)
+        {
+            if (i == (int)targetColor)
+            {
+                // 타겟 색상은 요청한 확률로 고정
+                level_data.probability[i] = targetProbability;
+            }
+            else if (level_data.probability[i] > 0.0f)
+            {
+                // 출현 중인 블록은 기존 비율(ratio)을 반영하여 나머지 확률을 나누어 가짐
+                float ratio = level_data.probability[i] / sumOthers;
+                level_data.probability[i] = remainingProbability * ratio;
+            }
+            else
+            {
+                // 출현 확률이 0이었던 블록은 확실하게 0으로 유지
+                level_data.probability[i] = 0.0f;
+            }
+        }
+
+        // 최종적으로 합계가 1.0이 되도록 정규화 진행
+        level_data.normalize();
+
+        Debug.Log($"Target {targetColor} set to {targetProbability} (Zeros kept). Current Probabilities: " + string.Join(", ", level_data.probability));
+    }
+
+    public void IncreaseBlockProbability(Block.COLOR targetColor, float increaseAmount)
+    {
+        LevelData level_data = this.level_control.getCurrentLevelData();
+
+        // 지정된 블록의 현재 확률을 가져옵니다.
+        float currentProbability = level_data.probability[(int)targetColor];
+
+        // 현재 확률에 요청받은 증가치를 더하고, 0.0 ~ 1.0 사이로 제한합니다.
+        float targetProbability = Mathf.Clamp(currentProbability + increaseAmount, 0.0f, 1.0f);
+
+        // 0을 보존하는 확률 설정 함수를 호출하여 안전하게 확률을 재분배합니다.
+        this.SetProbabilityKeepZeros(targetColor, targetProbability);
+
+        Debug.Log("Increased " + targetColor.ToString() + " by " + increaseAmount.ToString() + ". Target probability: " + targetProbability.ToString());
+    }
+
+    public void DecreaseBlockProbability(Block.COLOR targetColor, float decreaseAmount)
+    {
+        LevelData level_data = this.level_control.getCurrentLevelData();
+        // 지정된 블록의 현재 확률을 가져옵니다.
+        float currentProbability = level_data.probability[(int)targetColor];
+        // 현재 확률에서 요청받은 감소치를 빼고, 0.0 ~ 1.0 사이로 제한합니다.
+        float targetProbability = Mathf.Clamp(currentProbability - decreaseAmount, 0.0f, 1.0f);
+        // 0을 보존하는 확률 설정 함수를 호출하여 안전하게 확률을 재분배합니다.
+        this.SetProbabilityKeepZeros(targetColor, targetProbability);
+        Debug.Log("Decreased " + targetColor.ToString() + " by " + decreaseAmount.ToString() + ". Target probability: " + targetProbability.ToString());
+    }
+
+    public void MultiplyBlockProbability(Block.COLOR targetColor, float multiplier)
+    {
+        LevelData level_data = this.level_control.getCurrentLevelData();
+        // 지정된 블록의 현재 확률을 가져옵니다.
+        float currentProbability = level_data.probability[(int)targetColor];
+        // 현재 확률에 요청받은 배율을 곱하고, 0.0 ~ 1.0 사이로 제한합니다.
+        float targetProbability = Mathf.Clamp(currentProbability * multiplier, 0.0f, 1.0f);
+        // 0을 보존하는 확률 설정 함수를 호출하여 안전하게 확률을 재분배합니다.
+        this.SetProbabilityKeepZeros(targetColor, targetProbability);
+        Debug.Log("Multiplied " + targetColor.ToString() + " by " + multiplier.ToString() + ". Target probability: " + targetProbability.ToString());
     }
 }
