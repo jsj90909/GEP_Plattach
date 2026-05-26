@@ -1239,4 +1239,14 @@ public class BlockRoot : MonoBehaviour
         this.SetProbabilityKeepZeros(targetColor, targetProbability);
         Debug.Log("Multiplied " + targetColor.ToString() + " by " + multiplier.ToString() + ". Target probability: " + targetProbability.ToString());
     }
+
+    public void SetBlockProbability(Block.COLOR targetColor, float probability)
+    {
+        LevelData level_data = this.level_control.getCurrentLevelData();
+        // 지정된 블록의 확률을 요청받은 값으로 설정하고, 0.0 ~ 1.0 사이로 제한합니다.
+        float targetProbability = Mathf.Clamp(probability, 0.0f, 1.0f);
+        // 0을 보존하는 확률 설정 함수를 호출하여 안전하게 확률을 재분배합니다.
+        this.SetProbabilityKeepZeros(targetColor, targetProbability);
+        Debug.Log("Set " + targetColor.ToString() + " probability to " + targetProbability.ToString());
+    }
 }
