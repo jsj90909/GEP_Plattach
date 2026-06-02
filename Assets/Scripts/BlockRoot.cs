@@ -23,6 +23,7 @@ public class BlockRoot : MonoBehaviour
     private HashSet<Vector2Int> move_lock_positions = new HashSet<Vector2Int>();
 
     public bool preventAutoMatchOnStart = true;
+    private Block.COLOR last_matched_color = Block.COLOR.NONE;
 
     private JokerRoot joker_root = null;
     private DebuffRoot debuff_root = null;
@@ -159,7 +160,7 @@ public class BlockRoot : MonoBehaviour
                     }
                 }
 
-                this.score_counter.addIgniteCount2(ignite_count, vanishingblockcolors); // 점화 횟수를 증가. 연소 중인 블록의 색도 함께 전달
+                this.score_counter.addIgniteCount2(ignite_count, vanishingblockcolors, GetLastMatchedColor()); // 점화 횟수를 증가. 연소 중인 블록의 색도 함께 전달, 가장 최근 매치된 색 전달
                 this.score_counter.updateTotalScore(); // 합계 점수 갱신
 
                 int block_count = 0; // 불붙는 중인 블록 수
@@ -485,6 +486,8 @@ public class BlockRoot : MonoBehaviour
             if (rx - lx + 1 < require_blocks) { break; }
             if (normal_block_num == 0) { break; }
 
+            this.last_matched_color = start.color;
+
             for (int x = lx; x < rx + 1; x++)
             {
                 this.blocks[x, start.i_pos.y].toVanishing();
@@ -538,6 +541,8 @@ public class BlockRoot : MonoBehaviour
         {
             if (uy - dy + 1 < require_blocks) { break; }
             if (normal_block_num == 0) { break; }
+
+            this.last_matched_color = start.color;
 
             for (int y = dy; y < uy + 1; y++)
             {
@@ -1079,6 +1084,8 @@ public class BlockRoot : MonoBehaviour
 
         if (has_match)
         {
+            this.last_matched_color = color;
+
             // 연속 점화(콤보)가 아니라면 리셋
             if (!this.is_vanishing_prev)
             {
@@ -1103,7 +1110,7 @@ public class BlockRoot : MonoBehaviour
             }
 
             // 아이템 사용을 1회의 매치로 취급
-            this.score_counter.addIgniteCount2(1, vanishingblockcolors);
+            this.score_counter.addIgniteCount2(1, vanishingblockcolors, GetLastMatchedColor());
             this.score_counter.updateTotalScore();
 
             // 타는 중인 모든 블록의 연소 타이머 재시작
@@ -1279,5 +1286,10 @@ public class BlockRoot : MonoBehaviour
         }
 
         return stats;
+    }
+
+    public Block.COLOR GetLastMatchedColor()
+    {
+        return this.last_matched_color;
     }
 }

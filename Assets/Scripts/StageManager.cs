@@ -285,4 +285,14 @@ public class StageManager : MonoBehaviour
         current_moves += amount;
         Debug.Log("이동 횟수 증가: " + amount + " / 현재 이동 횟수: " + current_moves);
     }
+
+    public Block.COLOR GetBossZeroScoreColorIndex()
+    {
+        return boss_zero_score_color;
+    }
+
+    public bool IsBossStage()
+    {
+        return current_stage == 3;
+    }
 }

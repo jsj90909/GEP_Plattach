@@ -29,6 +29,8 @@ public class ScoreCounter : MonoBehaviour
     public float MultiplierTimer => multiplier_timer;
     public int CurrentMultiplier => current_multiplier;
 
+    private StageManager stage_manager;
+
     void Start()
     {
         //QUOTA_SCORE = 10000;
@@ -51,6 +53,8 @@ public class ScoreCounter : MonoBehaviour
 
         current_multiplier = 1;
         multiplier_timer = 0.0f;
+
+        stage_manager = this.gameObject.GetComponent<StageManager>();
     }
 
     void Update()
@@ -87,8 +91,17 @@ public class ScoreCounter : MonoBehaviour
         this.update_score(); // 점수 계산
     }
 
-    public void addIgniteCount2(int count, int[] blockcolors)
+    public void addIgniteCount2(int count, int[] blockcolors, Block.COLOR last_matched_color)
     {
+        if (stage_manager.IsBossStage())
+        {
+            if (last_matched_color == stage_manager.GetBossZeroScoreColorIndex())
+            {
+                this.last.score = 0;
+                //this.last.ignite = 0;
+                return;
+            }
+        }
         this.last.ignite += count; // 연쇄 수에 count를 합산
 
         int[] finalscore = new int[blockcolors.Length];
