@@ -1249,4 +1249,35 @@ public class BlockRoot : MonoBehaviour
         this.SetProbabilityKeepZeros(targetColor, targetProbability);
         Debug.Log("Set " + targetColor.ToString() + " probability to " + targetProbability.ToString());
     }
+
+    // 반환할 데이터를 담을 구조체
+    public struct BlockStat
+    {
+        public float probability;
+        public int score;
+        public float vanish_time;
+    }
+
+    // 색상별 통계 데이터를 딕셔너리 형태로 반환하는 함수
+    public Dictionary<Block.COLOR, BlockStat> GetBlockStats()
+    {
+        Dictionary<Block.COLOR, BlockStat> stats = new Dictionary<Block.COLOR, BlockStat>();
+
+        // 연소 시간은 스테이지 전체 공통 적용 값
+        float current_vanish_time = this.level_control.getVanishTime();
+
+        for (int i = 0; i < (int)Block.COLOR.NORMAL_COLOR_NUM; i++)
+        {
+            Block.COLOR color = (Block.COLOR)i;
+            BlockStat stat = new BlockStat();
+
+            stat.probability = this.level_control.GetProbability(color);
+            stat.score = this.score_counter.GetBlockScore(i);
+            stat.vanish_time = current_vanish_time;
+
+            stats.Add(color, stat);
+        }
+
+        return stats;
+    }
 }

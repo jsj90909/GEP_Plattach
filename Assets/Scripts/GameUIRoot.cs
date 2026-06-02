@@ -59,6 +59,7 @@ public class GameUIRoot : MonoBehaviour
         this.drawRightItemPanel();
         this.drawRightBossPanel();
 
+        this.drawBlockStat();
         this.drawMultiplierTimer();
     }
 
@@ -334,30 +335,98 @@ public class GameUIRoot : MonoBehaviour
     {
         if (this.score_counter == null) return;
 
-        // 남은 시간이 0보다 클 때만 화면에 렌더링 (효과 끝나면 자동으로 안 보임)
         if (this.score_counter.MultiplierTimer > 0.0f)
         {
-            // 1920 x 1080 기준 해상도의 상단 중앙 배치 계산
-            float box_width = 460.0f;
-            float box_height = 65.0f;
-            float x = (BASE_WIDTH / 2.0f) - (box_width / 2.0f);
-            float y = 40.0f; // 상단 레이블들과 겹치지 않는 적당한 높이
+            float box_width = 440.0f;
+            float box_height = 150.0f; // 높이 150으로 변경
+            float x = 1020.0f;
+            float y = SIDE_TOP;
 
             Rect rect = this.scaleRect(x, y, box_width, box_height);
 
-            // 반투명한 검은색 배경 박스 그리기
             this.drawPanel(rect);
 
-            // 타이머 강조를 위한 황금색(노란색) 폰트 스타일 세팅
             GUIStyle timer_style = new GUIStyle(this.title_style);
             timer_style.normal.textColor = Color.yellow;
-            timer_style.fontSize = 30; // 가시성을 위해 적당히 큰 크기 지정
+            timer_style.fontSize = 40; // 글자 크기 확대
+            timer_style.alignment = TextAnchor.MiddleCenter;
 
-            // 소수점 첫째 자리까지 남은 시간 포맷팅
-            string timer_text = $"점수 {this.score_counter.CurrentMultiplier}배 버프 중! : {this.score_counter.MultiplierTimer:F1}초";
+            string timer_text = $"점수 {this.score_counter.CurrentMultiplier}배 버프 중!\n{this.score_counter.MultiplierTimer:F1}초";
 
-            // 텍스트 출력
             GUI.Label(rect, timer_text, timer_style);
         }
+    }
+
+    private void drawBlockStat()
+    {
+        BlockRoot block_root = this.gameObject.GetComponent<BlockRoot>();
+        if (block_root == null) return;
+
+        var stats = block_root.GetBlockStats();
+
+        float box_width = 540.0f;
+        float box_height = 150.0f;
+        float x = 460.0f;
+        float y = SIDE_TOP;
+
+        Rect rect = this.scaleRect(x, y, box_width, box_height);
+        this.drawPanel(rect);
+
+        Block.COLOR[] display_colors = new Block.COLOR[] {
+            Block.COLOR.PINK, Block.COLOR.BLUE, Block.COLOR.YELLOW,
+            Block.COLOR.GREEN, Block.COLOR.MAGENTA, Block.COLOR.ORANGE
+        };
+
+        float column_width = 70.0f;
+
+        GUIStyle stat_style = new GUIStyle(this.text_style);
+        stat_style.alignment = TextAnchor.MiddleCenter;
+        stat_style.fontSize = 32;
+
+        for (int i = 0; i < display_colors.Length; i++)
+        {
+            Block.COLOR color = display_colors[i];
+            if (!stats.ContainsKey(color)) continue;
+
+            var stat = stats[color];
+            float item_x = x + (i * column_width) + 15.0f;
+
+            switch (color)
+            {
+                case Block.COLOR.PINK: stat_style.normal.textColor = new Color(1.0f, 0.5f, 0.5f); break;
+                case Block.COLOR.BLUE: stat_style.normal.textColor = Color.blue; break;
+                case Block.COLOR.YELLOW: stat_style.normal.textColor = Color.yellow; break;
+                case Block.COLOR.GREEN: stat_style.normal.textColor = Color.green; break;
+                case Block.COLOR.MAGENTA: stat_style.normal.textColor = Color.magenta; break;
+                case Block.COLOR.ORANGE: stat_style.normal.textColor = new Color(1.0f, 0.46f, 0.0f); break;
+            }
+
+            string prob_text = (stat.probability * 100f).ToString("F0") + "%";
+            GUI.Label(this.scaleRect(item_x, y + 25.0f, column_width, 40.0f), prob_text, stat_style);
+
+            // 점수 표기를 위한 별도 스타일 복사 및 자릿수별 크기 동적 조절
+            GUIStyle score_style = new GUIStyle(stat_style);
+            string score_text = stat.score.ToString();
+
+            if (score_text.Length >= 5)
+            {
+                score_style.fontSize = 18; // 5자릿수 이상 (예: 10000)
+            }
+            else if (score_text.Length >= 4)
+            {
+                score_style.fontSize = 22; // 4자릿수 (예: 1000)
+            }
+
+            GUI.Label(this.scaleRect(item_x, y + 85.0f, column_width, 40.0f), score_text, score_style);
+        }
+
+        float vanish_x = x + (display_colors.Length * column_width) + 20.0f;
+        GUIStyle vanish_style = new GUIStyle(this.title_style);
+        vanish_style.fontSize = 44;
+        vanish_style.normal.textColor = Color.white;
+        vanish_style.alignment = TextAnchor.MiddleCenter;
+
+        float current_vanish_time = block_root.level_control.getVanishTime();
+        GUI.Label(this.scaleRect(vanish_x, y, 90.0f, box_height), current_vanish_time.ToString("F1") + "초", vanish_style);
     }
 }

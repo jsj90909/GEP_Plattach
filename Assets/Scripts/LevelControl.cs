@@ -150,4 +150,10 @@ public class LevelControl
         this.level_datas[this.select_level].normalize();
         Debug.Log("Each Blocks' probability = " + string.Join(", ", this.level_datas[this.select_level].probability));
     }
+
+    public float GetProbability(Block.COLOR color)
+    {
+        if (this.level_datas == null || this.level_datas.Count == 0) return 0.0f;
+        return this.level_datas[this.select_level].probability[(int)color];
+    }
 }
