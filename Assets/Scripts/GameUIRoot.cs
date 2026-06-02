@@ -404,20 +404,45 @@ public class GameUIRoot : MonoBehaviour
             string prob_text = (stat.probability * 100f).ToString("F0") + "%";
             GUI.Label(this.scaleRect(item_x, y + 25.0f, column_width, 40.0f), prob_text, stat_style);
 
-            // 점수 표기를 위한 별도 스타일 복사 및 자릿수별 크기 동적 조절
             GUIStyle score_style = new GUIStyle(stat_style);
             string score_text = stat.score.ToString();
 
             if (score_text.Length >= 5)
             {
-                score_style.fontSize = 18; // 5자릿수 이상 (예: 10000)
+                score_style.fontSize = 18;
             }
             else if (score_text.Length >= 4)
             {
-                score_style.fontSize = 22; // 4자릿수 (예: 1000)
+                score_style.fontSize = 22;
             }
 
             GUI.Label(this.scaleRect(item_x, y + 85.0f, column_width, 40.0f), score_text, score_style);
+        }
+
+        // 실시간 연소 시간 연출 로직 추가
+        float display_vanish_time = block_root.level_control.getVanishTime();
+        float max_active_timer = 0.0f;
+        bool is_any_vanishing = false;
+
+        if (block_root.blocks != null)
+        {
+            foreach (BlockControl block in block_root.blocks)
+            {
+                if (block != null && block.isVanishing())
+                {
+                    is_any_vanishing = true;
+                    if (block.vanish_timer > max_active_timer)
+                    {
+                        max_active_timer = block.vanish_timer;
+                    }
+                }
+            }
+        }
+
+        // 연소 중인 블록이 있으면 타이머 수치 반영, 0이 되거나 평상시에는 스테이지 기본 시간 표시
+        if (is_any_vanishing)
+        {
+            display_vanish_time = Mathf.Max(0.0f, max_active_timer);
         }
 
         float vanish_x = x + (display_colors.Length * column_width) + 20.0f;
@@ -426,7 +451,6 @@ public class GameUIRoot : MonoBehaviour
         vanish_style.normal.textColor = Color.white;
         vanish_style.alignment = TextAnchor.MiddleCenter;
 
-        float current_vanish_time = block_root.level_control.getVanishTime();
-        GUI.Label(this.scaleRect(vanish_x, y, 90.0f, box_height), current_vanish_time.ToString("F1") + "초", vanish_style);
+        GUI.Label(this.scaleRect(vanish_x, y, 90.0f, box_height), display_vanish_time.ToString("F1") + "초", vanish_style);
     }
 }
