@@ -171,7 +171,7 @@ public class ShopRoot : MonoBehaviour
 
     private void createShopData()
     {
-        debuff_list.Add(new DebuffData(DebuffType.HEAT_TIME_DECREASE, "불타는 시간 감소", "다음 스테이지부터 블록이 더 빨리 사라집니다.", 250));
+        debuff_list.Add(new DebuffData(DebuffType.HEAT_TIME_DECREASE, "불타는 시간 감소", "다음 스테이지부터 블록이 더 빨리 사라집니다.", 350));
         debuff_list.Add(new DebuffData(DebuffType.SCORE_NULLIFY, "특정 구역 점수 무효화", "다음 스테이지부터 일부 구역의 블록 점수가 무효화됩니다.", 150));
         debuff_list.Add(new DebuffData(DebuffType.REQUIRE_MATCH_4, "4개 매치 필요", "다음 스테이지부터 4개 이상 연결해야 점수가 납니다.", 300));
         debuff_list.Add(new DebuffData(DebuffType.MOVE_LOCK, "이동 불가 구역 생성", "다음 스테이지부터 이동 불가 구역이 생성됩니다.", 150));
@@ -640,9 +640,14 @@ public class ShopRoot : MonoBehaviour
         List<JokerData> available_jokers = new List<JokerData>();
         foreach (var j in joker_list)
         {
-            // 이미 선택된(pending) 조커가 아니라면 후보에 추가
             if (!pending_joker_ids.Contains(j.id))
             {
+                // 2개 매치 조커이면서 플레이어 골드가 가격보다 적으면 후보에서 제외
+                if (j.id == JokerType.REQUIRE_MATCH_2 && this.player_gold < j.price)
+                {
+                    continue;
+                }
+
                 available_jokers.Add(j);
             }
         }
