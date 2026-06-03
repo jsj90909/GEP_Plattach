@@ -819,6 +819,11 @@ public class BlockRoot : MonoBehaviour
         this.level_control.setVanishTime(time);
     }
 
+    public void PlusHeatTime(float time)
+    {
+        this.level_control.setVanishTime(this.level_control.getVanishTime() + time);
+    }
+
     public void SetProbability(Block.COLOR color, float probability)
     {
         this.level_control.setProbability(color, probability);
