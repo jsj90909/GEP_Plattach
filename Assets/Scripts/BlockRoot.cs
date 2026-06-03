@@ -12,7 +12,9 @@ public class BlockRoot : MonoBehaviour
     private BlockControl grabbed_block = null; // 잡은 블록
 
     private ScoreCounter score_counter = null; // 점수 카운터 ScoreCounter
-    protected bool is_vanishing_prev = false; // 앞에서 발화했는가
+    //protected bool is_vanishing_prev = false; // 앞에서 발화했는가
+    protected bool is_chain_active = false; // 연쇄가 활성화되어 있는가
+    private int global_ignite_count = 0;
 
     public TextAsset levelData = null; // 레벨 데이터의 텍스트를 저장
     public LevelControl level_control; // LevelControl를 저장
@@ -104,6 +106,11 @@ public class BlockRoot : MonoBehaviour
                     StageManager.Instance.UseMove();
                 }
 
+                if (this.global_ignite_count == 0)
+                {
+                    this.score_counter.clearIgniteCount();
+                }
+
                 this.grabbed_block = null; // 지금은 블록을 잡고 있지 않음
             } while (false);
 
@@ -121,7 +128,7 @@ public class BlockRoot : MonoBehaviour
         }
         else
         {
-            int ignite_count = 0; // 불붙은 개수
+            int frame_ignite_count = 0; // 현재 불붙은 개수
 
             // 그리드 안의 모든 블록에 대해서 처리
             foreach (BlockControl block in this.blocks)
@@ -134,16 +141,20 @@ public class BlockRoot : MonoBehaviour
                 // 세로 또는 가로에 같은 색 블록이 세 개 이상 나열했다면
                 if (this.checkConnection(block))
                 {
-                    ignite_count++; // 불붙은 개수를 증가
+                    frame_ignite_count++; // 불붙은 개수를 증가
                 }
             }
 
-            if (ignite_count > 0)
+            if (frame_ignite_count > 0)
             { // 불붙은 개수가 0보다 크면 = 한 군데라도 맞춰진 곳이 있음
-                if (!this.is_vanishing_prev)
+                this.global_ignite_count += frame_ignite_count;
+
+                // 새로운 체인의 시작일 때만 콤보를 리셋
+                if (!this.is_chain_active)
                 {
-                    this.score_counter.clearIgniteCount(); // 연속 점화가 아니라면, 점화 횟수를 리셋
+                    this.score_counter.clearIgniteCount();
                 }
+                this.is_chain_active = true; // 체인 진행 중 상태로 잠금
 
                 int[] vanishingblockcolors = GetVanishinBlockColor(); // 연소 중인 블록의 색을 가져옴
                 HashSet<Vector2Int> vanishingblockpositions_set = GetVanishingBlockPosition(); // 연소 중인 블록의 위치
@@ -160,7 +171,7 @@ public class BlockRoot : MonoBehaviour
                     }
                 }
 
-                this.score_counter.addIgniteCount2(ignite_count, vanishingblockcolors, GetLastMatchedColor()); // 점화 횟수를 증가. 연소 중인 블록의 색도 함께 전달, 가장 최근 매치된 색 전달
+                this.score_counter.addIgniteCount2(frame_ignite_count, vanishingblockcolors, GetLastMatchedColor()); // 점화 횟수를 증가. 연소 중인 블록의 색도 함께 전달, 가장 최근 매치된 색 전달
                 this.score_counter.updateTotalScore(); // 합계 점수 갱신
 
                 int block_count = 0; // 불붙는 중인 블록 수
@@ -174,6 +185,11 @@ public class BlockRoot : MonoBehaviour
                         block_count++; // 발화 중인 블록 개수를 증가
                     }
                 }
+            }
+            else if (!this.is_has_vanishing_block() && !this.is_has_falling_block() && !this.is_has_sliding_block())
+            {
+                // 보드가 완전히 안정화되어 연쇄가 끝났을 때 전역 변수 초기화
+                this.global_ignite_count = 0;
             }
         }
 
@@ -235,7 +251,7 @@ public class BlockRoot : MonoBehaviour
             }
         } while (false);
 
-        this.is_vanishing_prev = is_vanishing;
+        //this.is_vanishing_prev = is_vanishing;
     }
 
     // 블록을 만들어 내고 가로 9칸, 세로 9칸에 배치
@@ -1089,13 +1105,18 @@ public class BlockRoot : MonoBehaviour
 
         if (has_match)
         {
-            this.last_matched_color = color;
-
-            // 연속 점화(콤보)가 아니라면 리셋
-            if (!this.is_vanishing_prev)
+            if (!this.is_chain_active)
             {
                 this.score_counter.clearIgniteCount();
             }
+
+            this.last_matched_color = color;
+
+            // 연속 점화(콤보)가 아니라면 리셋
+            //if (!this.is_vanishing_prev)
+            //{
+            //    this.score_counter.clearIgniteCount();
+            //}
 
             // 연소 중인 블록의 색상 및 위치 수집
             int[] vanishingblockcolors = GetVanishinBlockColor();
@@ -1128,7 +1149,9 @@ public class BlockRoot : MonoBehaviour
             }
 
             // 연소가 끝날 때까지 블록 낙하 로직이 실행되지 않도록 강제 플래그 설정
-            this.is_vanishing_prev = true;
+            //this.is_vanishing_prev = true;
+
+            this.is_chain_active = true;
 
             Debug.Log($"[RemoveBlocksByColor] Item effect applied successfully for color: {color}");
         }
