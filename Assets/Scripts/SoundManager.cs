@@ -15,14 +15,20 @@ public class SoundManager : MonoBehaviour
     // 배경음악 변수
     public AudioClip bgmClip;
     private AudioSource bgmSource;
-    private float normalVolume = 0.6f;
-    private float shopVolume = 0.3f;
+    private float normalVolume = 0.4f;
+    private float shopVolume = 0.2f;
+
+    private bool isFading = false;
+    private float startVolume;
+    private float targetVolume;
+    private float fadeTime = 0.0f;
+    private float fadeDuration = 1.0f;
 
     // 효과음 변수
     public AudioClip pickClip;
     public AudioClip moveClip;
     public AudioClip vanishClip;
-    private float sfxVolume = 0.6f;
+    private float sfxVolume = 0.5f;
 
     private AudioSource[] sfxSources;
     private int poolSize = 5;
@@ -63,12 +69,32 @@ public class SoundManager : MonoBehaviour
         }
     }
 
+    void Update()
+    {
+        if (isFading && bgmSource != null)
+        {
+            fadeTime += Time.deltaTime;
+            float t = fadeTime / fadeDuration;
+
+            bgmSource.volume = Mathf.Lerp(startVolume, targetVolume, t);
+
+            if (t >= 1.0f)
+            {
+                isFading = false;
+                bgmSource.volume = targetVolume;
+            }
+        }
+    }
+
     // 상점 상태에 따른 볼륨 조절 함수
     public void SetShopVolume(bool isShopOpen)
     {
         if (bgmSource != null)
         {
-            bgmSource.volume = isShopOpen ? shopVolume : normalVolume;
+            startVolume = bgmSource.volume;
+            targetVolume = isShopOpen ? shopVolume : normalVolume;
+            fadeTime = 0.0f;
+            isFading = true;
         }
     }
 
