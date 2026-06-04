@@ -451,6 +451,6 @@ public class GameUIRoot : MonoBehaviour
         vanish_style.normal.textColor = Color.white;
         vanish_style.alignment = TextAnchor.MiddleCenter;
 
-        GUI.Label(this.scaleRect(vanish_x, y, 90.0f, box_height), display_vanish_time.ToString("F1") + "√ ", vanish_style);
+        GUI.Label(this.scaleRect(vanish_x, y, 90.0f, box_height), display_vanish_time.ToString("F2") + "√ ", vanish_style);
     }
 }
