@@ -5,7 +5,17 @@ using UnityEngine.SceneManagement;
 
 // 상점 아이템 식별을 위한 Enum 정의
 public enum DebuffType { NONE, HEAT_TIME_DECREASE, SCORE_NULLIFY, REQUIRE_MATCH_4, MOVE_LOCK, MAGENTA_PROBABILITY_UP }
-public enum JokerType { NONE, BLUE_SCORE_UP, BLUE_PROBABILITY_UP, REQUIRE_MATCH_2, ALL_SCORE_UP, GREEN_PROBABILITY_ZERO, HEAT_TIME_INCREASE }
+public enum JokerType
+{
+    NONE,
+    BLUE_SCORE_UP,
+    BLUE_PROBABILITY_UP,
+    REQUIRE_MATCH_2,
+    ALL_SCORE_UP,
+    GREEN_PROBABILITY_ZERO,
+    HEAT_TIME_INCREASE,
+    ORANGE_HEAT_GROWTH
+}
 public enum ItemType { NONE, REMOVE_PINK, SCORE_MULTIPLIER, PLUS_MOVES }
 
 public class ShopRoot : MonoBehaviour
@@ -124,6 +134,7 @@ public class ShopRoot : MonoBehaviour
         if (this.block_root == null) this.block_root = this.gameObject.GetComponent<BlockRoot>();
         if (this.score_counter == null) this.score_counter = this.gameObject.GetComponent<ScoreCounter>();
         if (this.item_root == null) this.item_root = this.gameObject.GetComponent<ItemRoot>();
+        if (this.debuff_root == null) this.debuff_root = this.gameObject.GetComponent<DebuffRoot>();
 
         // 1. 누적된 디버프 모두 씌우기
         foreach (DebuffType debuff in this.pending_debuff_ids)
@@ -183,6 +194,7 @@ public class ShopRoot : MonoBehaviour
         joker_list.Add(new JokerData(JokerType.ALL_SCORE_UP, "전체 블록 점수 증가", "모든 색깔 블록의 점수를 500점으로 변경합니다.", 200));
         joker_list.Add(new JokerData(JokerType.GREEN_PROBABILITY_ZERO, "초록색 블록 제거", "다음 스테이지부터 초록색 블록이 등장하지 않습니다.", 250));
         joker_list.Add(new JokerData(JokerType.HEAT_TIME_INCREASE, "불타는 시간 증가", "다음 스테이지부터 블록이 더 느리게 사라집니다.", 150));
+        joker_list.Add(new JokerData(JokerType.ORANGE_HEAT_GROWTH, "불타는 시간 누적형 증가", "주황색 블록이 포함된 연쇄가 완전히 끝날 때마다 현재 스테이지의 연소 시간이 0.05초 증가합니다.", 100));
 
         item_list.Add(new ItemData(ItemType.REMOVE_PINK, "살구색 제거", "그리드의 살구색 블록을 제거합니다."));
         item_list.Add(new ItemData(ItemType.SCORE_MULTIPLIER, "점수 2배", "사용 시 일정 시간 동안 모든 블록의 획득 점수가 2배가 됩니다."));
@@ -522,10 +534,10 @@ public class ShopRoot : MonoBehaviour
         switch (debuff_id)
         {
             case DebuffType.SCORE_NULLIFY:
-                HashSet<Vector2Int> positions = new HashSet<Vector2Int> {};
-                for (int i = 0; i < Block.BLOCK_NUM_X/2; ++i)
+                HashSet<Vector2Int> positions = new HashSet<Vector2Int> { };
+                for (int i = 0; i < Block.BLOCK_NUM_X / 2; ++i)
                 {
-                    for (int j = 0; j < Block.BLOCK_NUM_Y/2; ++j)
+                    for (int j = 0; j < Block.BLOCK_NUM_Y / 2; ++j)
                     {
                         positions.Add(new Vector2Int(i, j));
                     }
@@ -556,6 +568,16 @@ public class ShopRoot : MonoBehaviour
 
     private void applyJokerById(JokerType joker_id)
     {
+        if (this.score_counter == null)
+        {
+            this.score_counter = this.gameObject.GetComponent<ScoreCounter>();
+        }
+
+        if (this.block_root == null)
+        {
+            this.block_root = this.gameObject.GetComponent<BlockRoot>();
+        }
+
         if (this.score_counter == null) return;
 
         switch (joker_id)
@@ -563,26 +585,47 @@ public class ShopRoot : MonoBehaviour
             case JokerType.BLUE_SCORE_UP:
                 this.score_counter.joker_score_overrides[(int)Block.COLOR.BLUE] = 1000;
                 break;
+
             case JokerType.BLUE_PROBABILITY_UP:
-                this.block_root.IncreaseBlockProbability(Block.COLOR.BLUE, 0.2f);
+                if (this.block_root != null)
+                {
+                    this.block_root.IncreaseBlockProbability(Block.COLOR.BLUE, 0.2f);
+                }
                 break;
+
             case JokerType.REQUIRE_MATCH_2:
                 if (this.block_root != null)
                 {
                     this.block_root.SetRequireBlocks(2);
                 }
                 break;
+
             case JokerType.ALL_SCORE_UP:
                 for (int i = 0; i < (int)Block.COLOR.NUM; i++)
                 {
                     this.score_counter.joker_score_overrides[i] = 500;
                 }
                 break;
+
             case JokerType.GREEN_PROBABILITY_ZERO:
-                this.block_root.SetBlockProbability(Block.COLOR.GREEN, 0.0f);
+                if (this.block_root != null)
+                {
+                    this.block_root.SetBlockProbability(Block.COLOR.GREEN, 0.0f);
+                }
                 break;
+
             case JokerType.HEAT_TIME_INCREASE:
-                this.block_root.PlusHeatTime(1.0f);
+                if (this.block_root != null)
+                {
+                    this.block_root.PlusHeatTime(1.0f);
+                }
+                break;
+
+            case JokerType.ORANGE_HEAT_GROWTH:
+                if (this.block_root != null)
+                {
+                    this.block_root.EnableOrangeHeatGrowthJoker();
+                }
                 break;
         }
     }
@@ -619,6 +662,19 @@ public class ShopRoot : MonoBehaviour
         }
     }
 
+    private bool ContainsDisplayedJoker(JokerType joker_id)
+    {
+        foreach (JokerData joker in current_displayed_jokers)
+        {
+            if (joker.id == joker_id)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     // 이미 선택된 항목을 제외하고 랜덤으로 3개를 추출하는 함수
     private void GenerateRandomOptions()
     {
@@ -651,8 +707,30 @@ public class ShopRoot : MonoBehaviour
                 available_jokers.Add(j);
             }
         }
+
         ShuffleList(available_jokers); // 후보를 무작위로 섞음
-        // 최대 3개까지만 자르기
-        current_displayed_jokers = available_jokers.GetRange(0, Mathf.Min(3, available_jokers.Count));
+
+        // HEAT_TIME_INCREASE와 ORANGE_HEAT_GROWTH는 둘 다 연소 시간 계열 조커이므로
+        // 같은 상점 선택지에 동시에 나오지 않게 한다.
+        current_displayed_jokers.Clear();
+
+        foreach (JokerData joker in available_jokers)
+        {
+            bool is_heat_time_joker_pair =
+                (joker.id == JokerType.HEAT_TIME_INCREASE && ContainsDisplayedJoker(JokerType.ORANGE_HEAT_GROWTH)) ||
+                (joker.id == JokerType.ORANGE_HEAT_GROWTH && ContainsDisplayedJoker(JokerType.HEAT_TIME_INCREASE));
+
+            if (is_heat_time_joker_pair)
+            {
+                continue;
+            }
+
+            current_displayed_jokers.Add(joker);
+
+            if (current_displayed_jokers.Count >= 3)
+            {
+                break;
+            }
+        }
     }
 }

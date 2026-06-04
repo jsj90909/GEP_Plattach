@@ -30,6 +30,13 @@ public class BlockRoot : MonoBehaviour
     private JokerRoot joker_root = null;
     private DebuffRoot debuff_root = null;
 
+    // 온기 조커: 주황색 블록이 포함된 연쇄가 끝날 때마다 현재 스테이지의 연소 시간을 증가시킴
+    private bool orange_heat_growth_joker_enabled = false;
+    private bool orange_matched_in_chain = false;
+    private float orange_heat_bonus_total = 0.0f;
+
+    private const float ORANGE_HEAT_BONUS_PER_CHAIN = 0.05f;
+
     void Awake()
     {
         this.main_camera = GameObject.FindGameObjectWithTag("MainCamera"); // 카메라로부터 마우스 커서를 통과하는 광선을 쏘기 위해서 필요
@@ -159,6 +166,14 @@ public class BlockRoot : MonoBehaviour
                 int[] vanishingblockcolors = GetVanishinBlockColor(); // 연소 중인 블록의 색을 가져옴
                 HashSet<Vector2Int> vanishingblockpositions_set = GetVanishingBlockPosition(); // 연소 중인 블록의 위치
 
+                // 온기 조커가 활성화되어 있고, 이번 연쇄에 주황색 블록이 포함되어 있으면 기록
+                // 점수 무효화 구역에 있어도 '주황색을 맞췄다'는 사실은 인정하기 위해 감점 처리 전에 체크
+                if (this.orange_heat_growth_joker_enabled &&
+                    vanishingblockcolors[(int)Block.COLOR.ORANGE] > 0)
+                {
+                    this.orange_matched_in_chain = true;
+                }
+
                 foreach (Vector2Int temp_set in vanishingblockpositions_set)
                 {
                     if (negative_block_positions != null)
@@ -188,7 +203,29 @@ public class BlockRoot : MonoBehaviour
             }
             else if (!this.is_has_vanishing_block() && !this.is_has_falling_block() && !this.is_has_sliding_block())
             {
-                // 보드가 완전히 안정화되어 연쇄가 끝났을 때 전역 변수 초기화
+                // 보드가 완전히 안정화되어 연쇄가 끝났을 때만 처리
+                if (this.is_chain_active)
+                {
+                    if (this.orange_heat_growth_joker_enabled && this.orange_matched_in_chain)
+                    {
+                        this.PlusHeatTime(ORANGE_HEAT_BONUS_PER_CHAIN);
+                        this.orange_heat_bonus_total += ORANGE_HEAT_BONUS_PER_CHAIN;
+
+                        Debug.Log(
+                            "[온기 조커] 주황색 연쇄 종료. 연소 시간 +" +
+                            ORANGE_HEAT_BONUS_PER_CHAIN.ToString("F2") +
+                            "초 / 누적 증가량: " +
+                            this.orange_heat_bonus_total.ToString("F2") +
+                            "초 / 현재 연소 시간: " +
+                            this.level_control.getVanishTime().ToString("F2") +
+                            "초"
+                        );
+                    }
+
+                    this.orange_matched_in_chain = false;
+                    this.is_chain_active = false;
+                }
+
                 this.global_ignite_count = 0;
             }
         }
@@ -753,6 +790,15 @@ public class BlockRoot : MonoBehaviour
         }
 
         return positionSet;
+    }
+
+    public void EnableOrangeHeatGrowthJoker()
+    {
+        this.orange_heat_growth_joker_enabled = true;
+        this.orange_matched_in_chain = false;
+        this.orange_heat_bonus_total = 0.0f;
+
+        Debug.Log("[BlockRoot] 온기 조커 활성화: 주황색 연쇄 종료 시 연소 시간 +0.05초");
     }
 
     public void SetRequireBlocks(int num)
