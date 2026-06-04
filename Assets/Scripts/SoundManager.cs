@@ -15,13 +15,14 @@ public class SoundManager : MonoBehaviour
     // 배경음악 변수
     public AudioClip bgmClip;
     private AudioSource bgmSource;
-    private float normalVolume = 0.8f;
-    private float shopVolume = 0.4f;
+    private float normalVolume = 0.6f;
+    private float shopVolume = 0.3f;
 
     // 효과음 변수
     public AudioClip pickClip;
     public AudioClip moveClip;
     public AudioClip vanishClip;
+    private float sfxVolume = 0.6f;
 
     private AudioSource[] sfxSources;
     private int poolSize = 5;
@@ -44,6 +45,7 @@ public class SoundManager : MonoBehaviour
             {
                 sfxSources[i] = gameObject.AddComponent<AudioSource>();
                 sfxSources[i].outputAudioMixerGroup = sfxGroup;
+                sfxSources[i].volume = sfxVolume;
             }
         }
         else
