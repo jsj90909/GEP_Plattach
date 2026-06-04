@@ -234,6 +234,7 @@ GameObject:
   - component: {fileID: 860052431}
   - component: {fileID: 860052432}
   - component: {fileID: 860052433}
+  - component: {fileID: 860052434}
   m_Layer: 0
   m_Name: GameRoot
   m_TagString: Untagged
@@ -366,6 +367,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f4929036857439c4681d56e6ccfbc069, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  QUOTA_SCORE: 10000
   guistyle:
     m_Name: 
     m_Normal:
@@ -677,6 +679,73 @@ MonoBehaviour:
     m_FixedHeight: 0
     m_StretchWidth: 1
     m_StretchHeight: 0
+  gold_style:
+    m_Name: 
+    m_Normal:
+      m_Background: {fileID: 0}
+      m_ScaledBackgrounds: []
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+    m_Hover:
+      m_Background: {fileID: 0}
+      m_ScaledBackgrounds: []
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+    m_Active:
+      m_Background: {fileID: 0}
+      m_ScaledBackgrounds: []
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+    m_Focused:
+      m_Background: {fileID: 0}
+      m_ScaledBackgrounds: []
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+    m_OnNormal:
+      m_Background: {fileID: 0}
+      m_ScaledBackgrounds: []
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+    m_OnHover:
+      m_Background: {fileID: 0}
+      m_ScaledBackgrounds: []
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+    m_OnActive:
+      m_Background: {fileID: 0}
+      m_ScaledBackgrounds: []
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+    m_OnFocused:
+      m_Background: {fileID: 0}
+      m_ScaledBackgrounds: []
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+    m_Border:
+      m_Left: 0
+      m_Right: 0
+      m_Top: 0
+      m_Bottom: 0
+    m_Margin:
+      m_Left: 0
+      m_Right: 0
+      m_Top: 0
+      m_Bottom: 0
+    m_Padding:
+      m_Left: 0
+      m_Right: 0
+      m_Top: 0
+      m_Bottom: 0
+    m_Overflow:
+      m_Left: 0
+      m_Right: 0
+      m_Top: 0
+      m_Bottom: 0
+    m_Font: {fileID: 0}
+    m_FontSize: 0
+    m_FontStyle: 0
+    m_Alignment: 0
+    m_WordWrap: 0
+    m_RichText: 1
+    m_TextClipping: 0
+    m_ImagePosition: 0
+    m_ContentOffset: {x: 0, y: 0}
+    m_FixedWidth: 0
+    m_FixedHeight: 0
+    m_StretchWidth: 1
+    m_StretchHeight: 0
 --- !u!114 &860052431
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -718,6 +787,24 @@ MonoBehaviour:
   time_limit: 60
   max_moves: 20
   current_moves: 20
+--- !u!114 &860052434
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 860052423}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3364082d58e22e84a8773aa7a2d9ace8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  bgmGroup: {fileID: 1272785294471244741, guid: 1d59c88ab2c04fa4286be69ae5fcc378, type: 2}
+  sfxGroup: {fileID: 6959893093446478984, guid: 1d59c88ab2c04fa4286be69ae5fcc378, type: 2}
+  bgmClip: {fileID: 8300000, guid: 99cda2a87a1c31b4b90f612d20eaa4aa, type: 3}
+  pickClip: {fileID: 8300000, guid: dd05fb581de9ba941bc0263671327298, type: 3}
+  moveClip: {fileID: 8300000, guid: 6c5acba244abb324fb0ec256b31500be, type: 3}
+  vanishClip: {fileID: 8300000, guid: 904b565f8ac1d8245997c612427ef7d2, type: 3}
 --- !u!1 &963194225
 GameObject:
   m_ObjectHideFlags: 0

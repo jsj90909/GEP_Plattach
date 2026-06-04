@@ -205,6 +205,8 @@ public class ShopRoot : MonoBehaviour
     {
         this.step = STEP.DEBUFF_SELECT;
 
+        SoundManager.Instance.SetShopVolume(true);
+
         this.selected_debuff_id = DebuffType.NONE;
         this.selected_joker_id = JokerType.NONE;
         this.selected_item_id = ItemType.NONE;
@@ -466,6 +468,7 @@ public class ShopRoot : MonoBehaviour
             "다음 스테이지 시작",
             this.button_style))
         {
+            SoundManager.Instance.SetShopVolume(false);
             StageManager.Instance.NextStage();
         }
 
@@ -474,6 +477,7 @@ public class ShopRoot : MonoBehaviour
             "타이틀로 돌아가기",
             this.button_style))
         {
+            SoundManager.Instance.SetShopVolume(false);
             this.step = STEP.CLOSED;
             SceneManager.LoadScene("TitleScene");
         }

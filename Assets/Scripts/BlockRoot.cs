@@ -76,6 +76,7 @@ public class BlockRoot : MonoBehaviour
 
                         this.grabbed_block = block; // 처리 중인 블록을 grabbed_block에 등록
                         this.grabbed_block.beginGrab();
+                        SoundManager.Instance.PlayBlockPick();
                         break;
                     }
                 }
@@ -112,6 +113,8 @@ public class BlockRoot : MonoBehaviour
                 {
                     StageManager.Instance.UseMove();
                 }
+
+                SoundManager.Instance.PlayBlockMove();
 
                 if (this.global_ignite_count == 0)
                 {
@@ -154,6 +157,9 @@ public class BlockRoot : MonoBehaviour
 
             if (frame_ignite_count > 0)
             { // 불붙은 개수가 0보다 크면 = 한 군데라도 맞춰진 곳이 있음
+
+                SoundManager.Instance.PlayBlockVanish();
+
                 this.global_ignite_count += frame_ignite_count;
 
                 // 새로운 체인의 시작일 때만 콤보를 리셋
@@ -1151,6 +1157,8 @@ public class BlockRoot : MonoBehaviour
 
         if (has_match)
         {
+            SoundManager.Instance.PlayBlockVanish();
+
             if (!this.is_chain_active)
             {
                 this.score_counter.clearIgniteCount();
