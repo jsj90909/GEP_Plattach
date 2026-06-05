@@ -370,7 +370,6 @@ public class ShopRoot : MonoBehaviour
             this.text_style
         );
 
-        // joker_list 대신 current_displayed_jokers 사용
         for (int i = 0; i < current_displayed_jokers.Count; i++)
         {
             JokerData data = current_displayed_jokers[i];
@@ -390,22 +389,37 @@ public class ShopRoot : MonoBehaviour
                 this.text_style
             );
 
-            if (GUI.Button(
-                new Rect(box_rect.x + 760, box_rect.y + 52, 170, 65),
-                "구매",
-                this.button_style))
+            // 이미 구매한 조커인지 확인하여 품절 표시
+            if (this.pending_joker_ids.Contains(data.id))
             {
-                this.selectJoker(data);
+                GUIStyle soldout_style = new GUIStyle(this.text_style);
+                soldout_style.normal.textColor = Color.gray;
+                soldout_style.alignment = TextAnchor.MiddleCenter;
+
+                GUI.Label(
+                    new Rect(box_rect.x + 760, box_rect.y + 52, 170, 65),
+                    "구매 완료",
+                    soldout_style
+                );
+            }
+            else
+            {
+                if (GUI.Button(
+                    new Rect(box_rect.x + 760, box_rect.y + 52, 170, 65),
+                    "구매",
+                    this.button_style))
+                {
+                    this.selectJoker(data);
+                }
             }
         }
 
+        // 수동으로 아이템 선택으로 넘어가는 버튼
         if (GUI.Button(
             new Rect(Screen.width / 2 - 170, Screen.height - 175, 340, 65),
-            "조커 구매 안 함",
+            "아이템 선택으로 넘어가기",
             this.button_style))
         {
-            this.selected_joker_id = JokerType.NONE;
-
             this.step = STEP.ITEM_SELECT;
             this.message = "사용 아이템은 무료로 하나 선택합니다.";
         }
@@ -453,11 +467,23 @@ public class ShopRoot : MonoBehaviour
         Rect box_rect = new Rect(Screen.width / 2 - 500, 160, 1000, 420);
         GUI.Box(box_rect, "");
 
+        // 누적 보유 중인 조커 목록을 한 줄 문자열로 생성
+        string purchasedJokers = "없음";
+        if (this.pending_joker_ids.Count > 0)
+        {
+            List<string> names = new List<string>();
+            foreach (var id in this.pending_joker_ids)
+            {
+                names.Add(joker_list.Find(j => j.id == id)?.name ?? id.ToString());
+            }
+            purchasedJokers = string.Join(", ", names);
+        }
+
         GUI.Label(
         new Rect(box_rect.x + 40, box_rect.y + 35, 920, 350),
         $"상점 선택 완료\n\n" +
         $"선택한 디버프 : {debuff_list.Find(d => d.id == this.selected_debuff_id)?.name ?? this.selected_debuff_id.ToString()}\n" +
-        $"구매한 조커 : {joker_list.Find(j => j.id == this.selected_joker_id)?.name ?? this.selected_joker_id.ToString()}\n" +
+        $"보유 중인 조커 : {purchasedJokers}\n" +
         $"선택한 사용 아이템 : {item_list.Find(i => i.id == this.selected_item_id)?.name ?? this.selected_item_id.ToString()}\n\n" +
         $"현재 골드 : {player_gold}",
         this.text_style
@@ -502,13 +528,28 @@ public class ShopRoot : MonoBehaviour
             return;
         }
 
-        this.selected_joker_id = data.id; // 완료 창 표시용
-        this.pending_joker_ids.Add(data.id); // 실제 효과 리스트에 누적
+        this.selected_joker_id = data.id;
+        this.pending_joker_ids.Add(data.id);
 
         this.player_gold -= data.price;
+        this.message = data.name + " 구매 완료!";
 
-        this.step = STEP.ITEM_SELECT;
-        this.message = data.name + " 구매 완료. 사용 아이템을 선택하세요.";
+        // 구매 직후, 더 살 수 있는 조커가 남아있는지 검사 (자동 전환 로직)
+        bool canBuyMore = false;
+        foreach (JokerData joker in current_displayed_jokers)
+        {
+            if (!this.pending_joker_ids.Contains(joker.id) && this.player_gold >= joker.price)
+            {
+                canBuyMore = true;
+                break;
+            }
+        }
+
+        if (!canBuyMore)
+        {
+            this.step = STEP.ITEM_SELECT;
+            this.message = "더 이상 구매할 수 있는 조커가 없습니다. 사용 아이템을 선택하세요.";
+        }
     }
 
     private void selectItem(ItemData data)

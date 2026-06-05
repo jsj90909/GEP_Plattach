@@ -116,36 +116,6 @@ public class GameUIRoot : MonoBehaviour
         return BASE_WIDTH - SIDE_MARGIN - SIDE_WIDTH;
     }
 
-    private void drawLeftTopJokerPanel()
-    {
-        float x = this.getLeftX();
-        float y = SIDE_TOP;
-        float w = SIDE_WIDTH;
-        float h = JOKER_PANEL_HEIGHT;
-
-        Rect rect = this.scaleRect(x, y, w, h);
-        this.drawPanel(rect);
-
-        GUI.Label(
-            this.scaleRect(x, y + 70.0f, w, 60.0f),
-            "조커",
-            this.title_style
-        );
-
-        string joker_name = "없음";
-
-        if (this.shop_root != null)
-        {
-            joker_name = this.shop_root.GetCurrentJokerName();
-        }
-
-        GUI.Label(
-            this.scaleRect(x + 35.0f, y + 145.0f, w - 70.0f, 80.0f),
-            joker_name,
-            this.text_style
-        );
-    }
-
     private string getStageText()
     {
         int stage = 1;
@@ -163,14 +133,83 @@ public class GameUIRoot : MonoBehaviour
         return "현재 스테이지 : \n" + stage.ToString() + " 스테이지";
     }
 
+    // 조커 개수(줄 수)에 따라 동적인 패널 높이를 계산하는 함수
+    private float GetDynamicJokerPanelHeight(out int lineCount)
+    {
+        float base_height = 250.0f;
+        lineCount = 1;
+
+        if (this.shop_root != null)
+        {
+            string jokerName = this.shop_root.GetCurrentJokerName();
+            if (jokerName != "없음")
+            {
+                lineCount = jokerName.Split('\n').Length;
+            }
+        }
+
+        // 2줄까지는 기본 높이(250) 안에 여유롭게 표기 가능
+        if (lineCount <= 2)
+        {
+            return base_height;
+        }
+
+        // 3줄부터는 한 줄당 40px씩 패널 높이 확장
+        return base_height + (lineCount - 2) * 40.0f;
+    }
+
+    private void drawLeftTopJokerPanel()
+    {
+        float x = this.getLeftX();
+        float y = SIDE_TOP;
+        float w = SIDE_WIDTH;
+
+        // 동적 높이 계산
+        int lineCount;
+        float h = GetDynamicJokerPanelHeight(out lineCount);
+
+        Rect rect = this.scaleRect(x, y, w, h);
+        this.drawPanel(rect);
+
+        GUI.Label(
+            this.scaleRect(x, y + 70.0f, w, 60.0f),
+            "조커",
+            this.title_style
+        );
+
+        string joker_name = "없음";
+        if (this.shop_root != null)
+        {
+            joker_name = this.shop_root.GetCurrentJokerName();
+        }
+
+        // 텍스트 출력 영역도 패널 높이 확장에 맞춰 늘려줌
+        float text_height = 80.0f;
+        if (lineCount > 2)
+        {
+            text_height += (lineCount - 2) * 40.0f;
+        }
+
+        GUI.Label(
+            this.scaleRect(x + 35.0f, y + 145.0f, w - 70.0f, text_height),
+            joker_name,
+            this.text_style
+        );
+    }
+
     private void drawLeftInfoPanel()
     {
         float x = this.getLeftX();
 
-        float y = SIDE_TOP + JOKER_PANEL_HEIGHT + PANEL_GAP;
+        // 위쪽 조커 패널의 높이를 가져와 시작 Y 좌표 계산
+        int dummy;
+        float currentJokerPanelHeight = GetDynamicJokerPanelHeight(out dummy);
+
+        float y = SIDE_TOP + currentJokerPanelHeight + PANEL_GAP;
         float w = SIDE_WIDTH;
 
-        // 좌측 아래 패널은 SIDE_BOTTOM에 정확히 맞춰 끝나게 계산
+        // 좌측 아래 패널은 SIDE_BOTTOM에 정확히 맞춰 끝나게 계산되므로
+        // 위에서 패널이 길어지면 아래 정보 패널이 자동으로 축소됨
         float h = SIDE_BOTTOM - y;
 
         Rect rect = this.scaleRect(x, y, w, h);
