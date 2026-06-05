@@ -286,7 +286,7 @@ public class GameUIRoot : MonoBehaviour
             if (GUI.Button(
                 this.scaleRect(x + 50.0f, y + 105.0f, w - 100.0f, 70.0f),
                 item_name,
-                this.button_style))
+                this.button_style) || Input.GetKeyDown(KeyCode.Space))
             {
                 Debug.Log("[GameUIRoot] 사용 아이템 사용: " + item_name);
 

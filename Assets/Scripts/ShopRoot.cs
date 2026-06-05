@@ -184,7 +184,7 @@ public class ShopRoot : MonoBehaviour
     {
         debuff_list.Add(new DebuffData(DebuffType.HEAT_TIME_DECREASE, "불타는 시간 감소", "다음 스테이지부터 블록이 더 빨리 사라집니다.", 350));
         debuff_list.Add(new DebuffData(DebuffType.SCORE_NULLIFY, "특정 구역 점수 무효화", "다음 스테이지부터 일부 구역의 블록 점수가 무효화됩니다.", 150));
-        debuff_list.Add(new DebuffData(DebuffType.REQUIRE_MATCH_4, "4개 매치 필요", "다음 스테이지부터 4개 이상 연결해야 점수가 납니다.", 300));
+        debuff_list.Add(new DebuffData(DebuffType.REQUIRE_MATCH_4, "4개 매치 필요", "다음 스테이지부터 4개 이상 연결해야 점수가 납니다.", 400));
         debuff_list.Add(new DebuffData(DebuffType.MOVE_LOCK, "이동 불가 구역 생성", "다음 스테이지부터 이동 불가 구역이 생성됩니다.", 150));
         debuff_list.Add(new DebuffData(DebuffType.MAGENTA_PROBABILITY_UP, "마젠타 블록 확률 생성", "다음 스테이지부터 마젠타 블록 등장 확률이 생성됩니다.", 300));
 
@@ -194,7 +194,7 @@ public class ShopRoot : MonoBehaviour
         joker_list.Add(new JokerData(JokerType.ALL_SCORE_UP, "전체 블록 점수 증가", "모든 색깔 블록의 점수를 500점으로 변경합니다.", 200));
         joker_list.Add(new JokerData(JokerType.GREEN_PROBABILITY_ZERO, "초록색 블록 제거", "다음 스테이지부터 초록색 블록이 등장하지 않습니다.", 250));
         joker_list.Add(new JokerData(JokerType.HEAT_TIME_INCREASE, "불타는 시간 증가", "다음 스테이지부터 블록이 더 느리게 사라집니다.", 150));
-        joker_list.Add(new JokerData(JokerType.ORANGE_HEAT_GROWTH, "불타는 시간 누적형 증가", "주황색 블록이 포함된 연쇄가 완전히 끝날 때마다 현재 스테이지의 연소 시간이 0.05초 증가합니다.", 100));
+        joker_list.Add(new JokerData(JokerType.ORANGE_HEAT_GROWTH, "불타는 시간 누적형 증가", "주황색 블록이 연쇄될 때마다 현재 스테이지의 연소 시간이 0.05초 증가합니다.", 100));
 
         item_list.Add(new ItemData(ItemType.REMOVE_PINK, "살구색 제거", "그리드의 살구색 블록을 제거합니다."));
         item_list.Add(new ItemData(ItemType.SCORE_MULTIPLIER, "점수 2배", "사용 시 일정 시간 동안 모든 블록의 획득 점수가 2배가 됩니다."));
@@ -644,12 +644,12 @@ public class ShopRoot : MonoBehaviour
             case ItemType.SCORE_MULTIPLIER:
                 if (this.score_counter != null)
                 {
-                    // 2배수 적용, 5초 동안 지속
-                    this.score_counter.ActivateScoreMultiplier(2, 5.0f);
+                    // 2배수 적용, 20초 동안 지속
+                    this.score_counter.ActivateScoreMultiplier(2, 20.0f);
                 }
                 break;
             case ItemType.PLUS_MOVES:
-                StageManager.Instance.PlusCurrentMoves(10);
+                StageManager.Instance.PlusCurrentMoves(20);
                 break;
         }
     }

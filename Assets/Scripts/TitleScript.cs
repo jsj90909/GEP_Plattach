@@ -55,7 +55,7 @@ public class TitleScript : MonoBehaviour
 
         GUI.Label(
             new Rect(x, y, w, 50.0f),
-            "조작법 : Click & Drag",
+            "조작법 : Click & Drag, 아이템 사용 : 우측 버튼 클릭 or 스페이스바",
             this.label_style
         );
 
