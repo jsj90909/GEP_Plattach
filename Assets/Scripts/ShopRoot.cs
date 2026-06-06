@@ -37,6 +37,7 @@ public class ShopRoot : MonoBehaviour
     private ItemRoot item_root = null;
     private SceneControl scene_control = null;
     private DebuffRoot debuff_root = null;
+    private StageManager stage_manager = null;
 
     public int player_gold = 0;
 
@@ -127,6 +128,7 @@ public class ShopRoot : MonoBehaviour
         this.item_root = this.gameObject.GetComponent<ItemRoot>();
         this.scene_control = this.gameObject.GetComponent<SceneControl>();
         this.debuff_root = this.gameObject.GetComponent<DebuffRoot>();
+        this.stage_manager = this.gameObject.GetComponent<StageManager>();
 
         this.createShopData();
     }
@@ -192,14 +194,14 @@ public class ShopRoot : MonoBehaviour
     private void createShopData()
     {
         debuff_list.Add(new DebuffData(DebuffType.HEAT_TIME_DECREASE, "불타는 시간 감소", "다음 스테이지부터 블록이 더 빨리 사라집니다.", 400));
-        debuff_list.Add(new DebuffData(DebuffType.SCORE_NULLIFY, "특정 구역 점수 무효화", "다음 스테이지부터 일부 구역의 블록 점수가 무효화됩니다.", 150));
+        debuff_list.Add(new DebuffData(DebuffType.SCORE_NULLIFY, "특정 구역 점수 무효화", "다음 스테이지부터 일부 구역의 블록 점수가 무효화됩니다.", 200));
         debuff_list.Add(new DebuffData(DebuffType.REQUIRE_MATCH_4, "4개 매치 필요", "다음 스테이지부터 4개 이상 연결해야 점수가 납니다.", 500));
-        debuff_list.Add(new DebuffData(DebuffType.MOVE_LOCK, "이동 불가 구역 생성", "다음 스테이지부터 이동 불가 구역이 생성됩니다.", 150));
+        debuff_list.Add(new DebuffData(DebuffType.MOVE_LOCK, "이동 불가 구역 생성", "다음 스테이지부터 이동 불가 구역이 생성됩니다.", 200));
         debuff_list.Add(new DebuffData(DebuffType.MAGENTA_PROBABILITY_UP, "마젠타 블록 확률 생성", "다음 스테이지부터 마젠타 블록 등장 확률이 생성됩니다.", 300));
 
         joker_list.Add(new JokerData(JokerType.BLUE_SCORE_UP, "파란색 블록 점수 증가", "파란색 블록 점수를 1000점 증가시킵니다.", 100));
         joker_list.Add(new JokerData(JokerType.BLUE_PROBABILITY_UP, "파란색 블록 확률 증가", "파란색 블록 등장 확률을 증가시킵니다.", 150));
-        joker_list.Add(new JokerData(JokerType.REQUIRE_MATCH_2, "매치 요구 수 감소", "다음 스테이지부터 2개만 연결하면 점수가 납니다.(4개 요구 무효화)", 450));
+        joker_list.Add(new JokerData(JokerType.REQUIRE_MATCH_2, "매치 요구 수 감소", "다음 스테이지부터 2개만 연결하면 점수가 납니다.(4개 요구 무효화)", 600));
         joker_list.Add(new JokerData(JokerType.ALL_SCORE_UP, "전체 블록 점수 증가", "모든 색깔 블록의 점수를 500점 증가시킵니다.", 200));
         joker_list.Add(new JokerData(JokerType.GREEN_PROBABILITY_ZERO, "초록색 블록 제거", "다음 스테이지부터 초록색 블록이 등장하지 않습니다.", 250));
         joker_list.Add(new JokerData(JokerType.HEAT_TIME_INCREASE, "불타는 시간 증가", "다음 스테이지부터 블록이 더 느리게 사라집니다.", 150));
@@ -639,7 +641,7 @@ public class ShopRoot : MonoBehaviour
         switch (joker_id)
         {
             case JokerType.BLUE_SCORE_UP:
-                this.score_counter.joker_score_overrides[(int)Block.COLOR.BLUE] = 1000;
+                this.score_counter.joker_score_overrides[(int)Block.COLOR.BLUE] += 1000;
                 break;
 
             case JokerType.BLUE_PROBABILITY_UP:
@@ -659,7 +661,7 @@ public class ShopRoot : MonoBehaviour
             case JokerType.ALL_SCORE_UP:
                 for (int i = 0; i < (int)Block.COLOR.NUM; i++)
                 {
-                    this.score_counter.joker_score_overrides[i] = 500;
+                    this.score_counter.joker_score_overrides[i] += 500;
                 }
                 break;
 
@@ -749,27 +751,46 @@ public class ShopRoot : MonoBehaviour
     // 2. 조커 랜덤 추출 함수 (현재 골드 기반)
     private void GenerateRandomJokers()
     {
+        current_displayed_jokers.Clear();
         List<JokerData> available_jokers = new List<JokerData>();
+
+        bool force_match_2 = false;
+
+        // 2스테이지 진입 시 돈이 충분하면 2매치 조커 확정 추가
+        if (stage_manager != null && stage_manager.current_stage == 2)
+        {
+            JokerData match2_joker = joker_list.Find(x => x.id == JokerType.REQUIRE_MATCH_2);
+            if (match2_joker != null && !pending_joker_ids.Contains(JokerType.REQUIRE_MATCH_2) && this.player_gold >= match2_joker.price)
+            {
+                current_displayed_jokers.Add(match2_joker);
+                force_match_2 = true;
+            }
+        }
+
         foreach (var j in joker_list)
         {
-            if (!pending_joker_ids.Contains(j.id))
-            {
-                // 2개 매치 조커이면서 현재 플레이어 골드(디버프 획득 골드 포함)가 가격보다 적으면 제외
-                if (j.id == JokerType.REQUIRE_MATCH_2 && this.player_gold < j.price)
-                {
-                    continue;
-                }
+            if (pending_joker_ids.Contains(j.id)) continue;
 
-                available_jokers.Add(j);
+            if (force_match_2 && j.id == JokerType.REQUIRE_MATCH_2) continue;
+
+            // 1스테이지에서는 무조건 제외
+            if (j.id == JokerType.REQUIRE_MATCH_2 && stage_manager != null && stage_manager.current_stage == 1)
+            {
+                continue;
             }
+
+            available_jokers.Add(j);
         }
 
         ShuffleList(available_jokers);
 
-        current_displayed_jokers.Clear();
-
         foreach (JokerData joker in available_jokers)
         {
+            if (current_displayed_jokers.Count >= 3)
+            {
+                break;
+            }
+
             bool is_heat_time_joker_pair =
                 (joker.id == JokerType.HEAT_TIME_INCREASE && ContainsDisplayedJoker(JokerType.ORANGE_HEAT_GROWTH)) ||
                 (joker.id == JokerType.ORANGE_HEAT_GROWTH && ContainsDisplayedJoker(JokerType.HEAT_TIME_INCREASE));
@@ -780,11 +801,6 @@ public class ShopRoot : MonoBehaviour
             }
 
             current_displayed_jokers.Add(joker);
-
-            if (current_displayed_jokers.Count >= 3)
-            {
-                break;
-            }
         }
     }
 }

@@ -208,7 +208,7 @@ public class BlockRoot : MonoBehaviour
                     }
                 }
             }
-            else if (!this.is_has_vanishing_block() && !this.is_has_falling_block() && !this.is_has_sliding_block())
+            else if (this.is_board_stable())
             {
                 // 보드가 완전히 안정화되어 연쇄가 끝났을 때만 처리
                 if (this.is_chain_active)
@@ -1373,5 +1373,16 @@ public class BlockRoot : MonoBehaviour
     public Block.COLOR GetLastMatchedColor()
     {
         return this.last_matched_color;
+    }
+
+    // 보드의 모든 블록이 완벽한 대기(IDLE) 상태인지 확인하는 함수
+    public bool is_board_stable()
+    {
+        foreach (BlockControl block in this.blocks)
+        {
+            if (block.vanish_timer > 0.0f) return false;
+            if (!block.isIdle()) return false; // SLIDE, FALL, VACANT, RESPAWN 모두 잡아냄
+        }
+        return true;
     }
 }

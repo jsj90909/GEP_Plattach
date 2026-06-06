@@ -8,6 +8,7 @@ public class TitleScript : MonoBehaviour
     private GUIStyle title_style;
     private GUIStyle label_style;
     private GUIStyle small_style;
+    private GUIStyle small2_style;
     private GUIStyle box_style;
 
     private bool gui_style_initialized = false;
@@ -80,6 +81,12 @@ public class TitleScript : MonoBehaviour
             "화면을 클릭하면 게임이 시작됩니다.",
             this.small_style
         );
+
+        GUI.Label(
+            new Rect(Screen.width / 2.0f - 300.0f, 850.0f, 600.0f, 50.0f),
+            "2스테이지 상점에서 조커를 사기 전에 600골드 이상을 소지하고 있으면 엄청난 일이 생길지도...",
+            this.small2_style
+        );
     }
 
     private void createGUIStyle()
@@ -105,6 +112,11 @@ public class TitleScript : MonoBehaviour
         this.small_style.fontSize = 28;
         this.small_style.normal.textColor = Color.yellow;
         this.small_style.alignment = TextAnchor.MiddleCenter;
+
+        this.small2_style = new GUIStyle();
+        this.small2_style.fontSize = 20;
+        this.small2_style.normal.textColor = Color.cyan;
+        this.small2_style.alignment = TextAnchor.MiddleCenter;
 
         this.box_style = new GUIStyle(GUI.skin.box);
 
