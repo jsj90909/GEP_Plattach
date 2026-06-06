@@ -117,6 +117,9 @@ public class ShopRoot : MonoBehaviour
     private List<DebuffData> current_displayed_debuffs = new List<DebuffData>();
     private List<JokerData> current_displayed_jokers = new List<JokerData>();
 
+    private HashSet<DebuffType> applied_debuffs = new HashSet<DebuffType>();
+    private HashSet<JokerType> applied_jokers = new HashSet<JokerType>();
+
     void Start()
     {
         this.score_counter = this.gameObject.GetComponent<ScoreCounter>();
@@ -139,13 +142,19 @@ public class ShopRoot : MonoBehaviour
         // 1. 누적된 디버프 모두 씌우기
         foreach (DebuffType debuff in this.pending_debuff_ids)
         {
-            this.applyDebuffById(debuff);
+            bool is_first_apply = !applied_debuffs.Contains(debuff);
+            this.applyDebuffById(debuff, is_first_apply);
+
+            if (is_first_apply) applied_debuffs.Add(debuff);
         }
 
         // 2. 누적된 조커 모두 씌우기
         foreach (JokerType joker in this.pending_joker_ids)
         {
-            this.applyJokerById(joker);
+            bool is_first_apply = !applied_jokers.Contains(joker);
+            this.applyJokerById(joker, is_first_apply);
+
+            if (is_first_apply) applied_jokers.Add(joker);
         }
 
         // 3. 아이템 씌우기 (1개)
@@ -182,16 +191,16 @@ public class ShopRoot : MonoBehaviour
 
     private void createShopData()
     {
-        debuff_list.Add(new DebuffData(DebuffType.HEAT_TIME_DECREASE, "불타는 시간 감소", "다음 스테이지부터 블록이 더 빨리 사라집니다.", 350));
+        debuff_list.Add(new DebuffData(DebuffType.HEAT_TIME_DECREASE, "불타는 시간 감소", "다음 스테이지부터 블록이 더 빨리 사라집니다.", 400));
         debuff_list.Add(new DebuffData(DebuffType.SCORE_NULLIFY, "특정 구역 점수 무효화", "다음 스테이지부터 일부 구역의 블록 점수가 무효화됩니다.", 150));
-        debuff_list.Add(new DebuffData(DebuffType.REQUIRE_MATCH_4, "4개 매치 필요", "다음 스테이지부터 4개 이상 연결해야 점수가 납니다.", 400));
+        debuff_list.Add(new DebuffData(DebuffType.REQUIRE_MATCH_4, "4개 매치 필요", "다음 스테이지부터 4개 이상 연결해야 점수가 납니다.", 500));
         debuff_list.Add(new DebuffData(DebuffType.MOVE_LOCK, "이동 불가 구역 생성", "다음 스테이지부터 이동 불가 구역이 생성됩니다.", 150));
         debuff_list.Add(new DebuffData(DebuffType.MAGENTA_PROBABILITY_UP, "마젠타 블록 확률 생성", "다음 스테이지부터 마젠타 블록 등장 확률이 생성됩니다.", 300));
 
-        joker_list.Add(new JokerData(JokerType.BLUE_SCORE_UP, "파란색 블록 점수 증가", "파란색 블록 점수를 1000점으로 변경합니다.", 100));
+        joker_list.Add(new JokerData(JokerType.BLUE_SCORE_UP, "파란색 블록 점수 증가", "파란색 블록 점수를 1000점 증가시킵니다.", 100));
         joker_list.Add(new JokerData(JokerType.BLUE_PROBABILITY_UP, "파란색 블록 확률 증가", "파란색 블록 등장 확률을 증가시킵니다.", 150));
-        joker_list.Add(new JokerData(JokerType.REQUIRE_MATCH_2, "매치 요구 수 감소", "다음 스테이지부터 2개만 연결하면 점수가 납니다.(4개 요구 무효화)", 400));
-        joker_list.Add(new JokerData(JokerType.ALL_SCORE_UP, "전체 블록 점수 증가", "모든 색깔 블록의 점수를 500점으로 변경합니다.", 200));
+        joker_list.Add(new JokerData(JokerType.REQUIRE_MATCH_2, "매치 요구 수 감소", "다음 스테이지부터 2개만 연결하면 점수가 납니다.(4개 요구 무효화)", 450));
+        joker_list.Add(new JokerData(JokerType.ALL_SCORE_UP, "전체 블록 점수 증가", "모든 색깔 블록의 점수를 500점 증가시킵니다.", 200));
         joker_list.Add(new JokerData(JokerType.GREEN_PROBABILITY_ZERO, "초록색 블록 제거", "다음 스테이지부터 초록색 블록이 등장하지 않습니다.", 250));
         joker_list.Add(new JokerData(JokerType.HEAT_TIME_INCREASE, "불타는 시간 증가", "다음 스테이지부터 블록이 더 느리게 사라집니다.", 150));
         joker_list.Add(new JokerData(JokerType.ORANGE_HEAT_GROWTH, "불타는 시간 누적형 증가", "주황색 블록이 연쇄될 때마다 현재 스테이지의 연소 시간이 0.05초 증가합니다.", 100));
@@ -211,7 +220,7 @@ public class ShopRoot : MonoBehaviour
         this.selected_joker_id = JokerType.NONE;
         this.selected_item_id = ItemType.NONE;
 
-        this.GenerateRandomOptions();
+        this.GenerateRandomDebuffs();
 
         this.message = "디버프를 선택하면 골드를 받습니다.";
     }
@@ -516,6 +525,8 @@ public class ShopRoot : MonoBehaviour
 
         this.player_gold += data.reward_gold;
 
+        this.GenerateRandomJokers();
+
         this.step = STEP.JOKER_SELECT;
         this.message = data.name + " 선택. +" + data.reward_gold.ToString() + " Gold 획득.";
     }
@@ -572,14 +583,14 @@ public class ShopRoot : MonoBehaviour
         this.message = "상점 선택이 완료되었습니다.";
     }
 
-    private void applyDebuffById(DebuffType debuff_id)
+    private void applyDebuffById(DebuffType debuff_id, bool is_first_apply)
     {
         if (this.block_root == null) return;
 
         switch (debuff_id)
         {
             case DebuffType.SCORE_NULLIFY:
-                HashSet<Vector2Int> positions = new HashSet<Vector2Int> { };
+                HashSet<Vector2Int> positions = new HashSet<Vector2Int>();
                 for (int i = 0; i < Block.BLOCK_NUM_X / 2; ++i)
                 {
                     for (int j = 0; j < Block.BLOCK_NUM_Y / 2; ++j)
@@ -593,7 +604,7 @@ public class ShopRoot : MonoBehaviour
                 this.block_root.SetRequireBlocks(4);
                 break;
             case DebuffType.HEAT_TIME_DECREASE:
-                this.block_root.PlusHeatTime(-0.5f);
+                if (is_first_apply) this.block_root.PlusHeatTime(-0.5f);
                 break;
             case DebuffType.MOVE_LOCK:
                 HashSet<Vector2Int> moveLockPositions = new HashSet<Vector2Int>();
@@ -606,12 +617,12 @@ public class ShopRoot : MonoBehaviour
                 this.block_root.SetMoveLockPositions(moveLockPositions);
                 break;
             case DebuffType.MAGENTA_PROBABILITY_UP:
-                this.block_root.IncreaseBlockProbability(Block.COLOR.MAGENTA, 0.15f);
+                if (is_first_apply) this.block_root.IncreaseBlockProbability(Block.COLOR.MAGENTA, 0.15f);
                 break;
         }
     }
 
-    private void applyJokerById(JokerType joker_id)
+    private void applyJokerById(JokerType joker_id, bool is_first_apply)
     {
         if (this.score_counter == null)
         {
@@ -632,7 +643,7 @@ public class ShopRoot : MonoBehaviour
                 break;
 
             case JokerType.BLUE_PROBABILITY_UP:
-                if (this.block_root != null)
+                if (this.block_root != null && is_first_apply)
                 {
                     this.block_root.IncreaseBlockProbability(Block.COLOR.BLUE, 0.2f);
                 }
@@ -660,7 +671,7 @@ public class ShopRoot : MonoBehaviour
                 break;
 
             case JokerType.HEAT_TIME_INCREASE:
-                if (this.block_root != null)
+                if (this.block_root != null && is_first_apply)
                 {
                     this.block_root.PlusHeatTime(1.0f);
                 }
@@ -720,30 +731,30 @@ public class ShopRoot : MonoBehaviour
         return false;
     }
 
-    // 이미 선택된 항목을 제외하고 랜덤으로 3개를 추출하는 함수
-    private void GenerateRandomOptions()
+    // 1. 디버프 랜덤 추출 함수
+    private void GenerateRandomDebuffs()
     {
-        // 1. 디버프 랜덤 추출
         List<DebuffData> available_debuffs = new List<DebuffData>();
         foreach (var d in debuff_list)
         {
-            // 이미 선택된(pending) 디버프가 아니라면 후보에 추가
             if (!pending_debuff_ids.Contains(d.id))
             {
                 available_debuffs.Add(d);
             }
         }
-        ShuffleList(available_debuffs); // 후보를 무작위로 섞음
-        // 최대 3개까지만 자르기
+        ShuffleList(available_debuffs);
         current_displayed_debuffs = available_debuffs.GetRange(0, Mathf.Min(3, available_debuffs.Count));
+    }
 
-        // 2. 조커 랜덤 추출
+    // 2. 조커 랜덤 추출 함수 (현재 골드 기반)
+    private void GenerateRandomJokers()
+    {
         List<JokerData> available_jokers = new List<JokerData>();
         foreach (var j in joker_list)
         {
             if (!pending_joker_ids.Contains(j.id))
             {
-                // 2개 매치 조커이면서 플레이어 골드가 가격보다 적으면 후보에서 제외
+                // 2개 매치 조커이면서 현재 플레이어 골드(디버프 획득 골드 포함)가 가격보다 적으면 제외
                 if (j.id == JokerType.REQUIRE_MATCH_2 && this.player_gold < j.price)
                 {
                     continue;
@@ -753,10 +764,8 @@ public class ShopRoot : MonoBehaviour
             }
         }
 
-        ShuffleList(available_jokers); // 후보를 무작위로 섞음
+        ShuffleList(available_jokers);
 
-        // HEAT_TIME_INCREASE와 ORANGE_HEAT_GROWTH는 둘 다 연소 시간 계열 조커이므로
-        // 같은 상점 선택지에 동시에 나오지 않게 한다.
         current_displayed_jokers.Clear();
 
         foreach (JokerData joker in available_jokers)

@@ -212,7 +212,7 @@ public class ScoreCounter : MonoBehaviour
         // 2순위: 조커로 인한 점수 고정 변경 적용
         if (joker_score_overrides[color_index] > 0)
         {
-            calculated_score = joker_score_overrides[color_index];
+            calculated_score += joker_score_overrides[color_index];
         }
 
         // 3순위: 아이템 버프로 인한 최종 점수 배수 적용
