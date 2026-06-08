@@ -756,7 +756,6 @@ public class ShopRoot : MonoBehaviour
 
         bool force_match_2 = false;
 
-        // 2스테이지 진입 시 돈이 충분하면 2매치 조커 확정 추가
         if (stage_manager != null && stage_manager.current_stage == 2)
         {
             JokerData match2_joker = joker_list.Find(x => x.id == JokerType.REQUIRE_MATCH_2);
@@ -773,10 +772,11 @@ public class ShopRoot : MonoBehaviour
 
             if (force_match_2 && j.id == JokerType.REQUIRE_MATCH_2) continue;
 
-            // 1스테이지에서는 무조건 제외
-            if (j.id == JokerType.REQUIRE_MATCH_2 && stage_manager != null && stage_manager.current_stage == 1)
+            if (j.id == JokerType.REQUIRE_MATCH_2)
             {
-                continue;
+                if (stage_manager != null && stage_manager.current_stage == 1) continue;
+
+                if (this.player_gold < j.price) continue;
             }
 
             available_jokers.Add(j);
